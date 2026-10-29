@@ -1,7 +1,17 @@
+<script setup lang="ts">
+import { useCart } from '@/composables/useCart'
+
+const { count } = useCart()
+</script>
+
 <template>
   <header class="header">
     <div class="container bar">
       <RouterLink to="/" class="logo">KICK<span>STORE</span></RouterLink>
+      <RouterLink v-if="count > 0" :to="{ name: 'checkout' }" class="cart">
+        Panier
+        <span class="badge">{{ count }}</span>
+      </RouterLink>
     </div>
   </header>
 </template>
@@ -31,5 +41,28 @@
 
 .logo span {
   color: var(--ok);
+}
+
+.cart {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  background: transparent;
+  font-weight: 600;
+}
+
+.badge {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 12px;
+  line-height: 22px;
+  text-align: center;
 }
 </style>

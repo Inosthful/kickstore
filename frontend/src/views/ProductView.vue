@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { api, ApiError, type Product, type StockSize } from '@/api/client'
 import SizePicker from '@/components/SizePicker.vue'
 import SneakerImage from '@/components/SneakerImage.vue'
+import { MAX_QUANTITY, useCart } from '@/composables/useCart'
 import { formatPrice, formatSize } from '@/utils/format'
 
 const route = useRoute()
+const router = useRouter()
+const cart = useCart()
 
 const id = computed(() => Number(route.params.id))
 const product = ref<Product | null>(null)
@@ -52,8 +55,21 @@ watch(
 )
 
 const selectedStock = computed(() => sizes.value?.find((s) => s.size === selected.value)?.stock ?? 0)
+const inCart = computed(() => (selected.value === null ? 0 : cart.quantityInCart(id.value, selected.value)))
+const limit = computed(() => Math.min(selectedStock.value, MAX_QUANTITY))
 const soldOut = computed(() => sizes.value !== null && sizes.value.every((s) => s.stock === 0))
 
+const buttonLabel = computed(() => {
+  if (selected.value === null) return 'Choisis une pointure'
+  if (inCart.value >= limit.value) return 'Maximum atteint dans le panier'
+  return 'Ajouter au panier'
+})
+
+function addToCart() {
+  if (!product.value || selected.value === null) return
+  cart.add(product.value, selected.value)
+  router.push({ name: 'checkout' })
+}
 </script>
 
 <template>
@@ -94,6 +110,14 @@ const soldOut = computed(() => sizes.value !== null && sizes.value.every((s) => 
         </p>
       </template>
 
+      <button
+        class="btn add"
+        type="button"
+        :disabled="!product || selected === null || inCart >= limit"
+        @click="addToCart"
+      >
+        {{ buttonLabel }}
+      </button>
     </section>
   </div>
 </template>
@@ -172,6 +196,11 @@ h2 {
 
 .note.danger {
   color: var(--danger);
+}
+
+.add {
+  width: 100%;
+  margin-top: 24px;
 }
 
 @media (max-width: 760px) {
