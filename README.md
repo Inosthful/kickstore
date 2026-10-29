@@ -9,16 +9,16 @@ Le compte-rendu (user stories, points de synchro, DoD, MoSCoW) est dans [docs/co
 C'est un mono-repo (workspaces npm) :
 
 ```
+openapi.yaml         le contrat d'API, écrit avant le code
 api/                 API Express en TypeScript, Prisma sur SQLite
 client/              front Vue 3 + Vite
 shared/types/        types TypeScript générés depuis le contrat, utilisés par l'api et le client
-contracts/           le contrat d'API (openapi.yaml), écrit avant le code
 .github/workflows/   CI (lint du contrat, tests de l'api, build du client) et CD (images Docker)
 docker-compose.yml   api + client, et le mock Prism en option
 docs/                compte-rendu du TP
 ```
 
-Le front et le back ne se parlent qu'à travers le contrat. `npm run types` régénère `shared/types` depuis `contracts/openapi.yaml`, et l'api comme le client typent leurs réponses avec ces types : si le contrat change sans qu'un des deux côtés suive, il ne compile plus. La CI vérifie aussi que les types partagés sont à jour avec le contrat.
+Le front et le back ne se parlent qu'à travers le contrat. `npm run types` régénère `shared/types` depuis `openapi.yaml`, et l'api comme le client typent leurs réponses avec ces types : si le contrat change sans qu'un des deux côtés suive, il ne compile plus. La CI vérifie aussi que les types partagés sont à jour avec le contrat.
 
 ## Lancer le projet
 

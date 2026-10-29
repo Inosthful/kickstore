@@ -21,10 +21,10 @@ services:
 
   # front sur le mock : docker compose --profile mock up mock
   mock:
-    image: stoplight/prism:5
-    command: mock -h 0.0.0.0 /contracts/openapi.yaml
+    image: stoplight/prism:5.14.2
+    command: mock -h 0.0.0.0 /tmp/openapi.yaml
     volumes:
-      - ./contracts:/contracts:ro
+      - ./openapi.yaml:/tmp/openapi.yaml:ro
     ports:
       - "4010:4010"
     profiles:

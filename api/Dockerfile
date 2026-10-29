@@ -10,7 +10,7 @@ COPY shared/package.json shared/
 RUN npm ci -w api
 
 COPY shared shared
-COPY contracts contracts
+COPY openapi.yaml ./
 COPY api api
 
 WORKDIR /app/api

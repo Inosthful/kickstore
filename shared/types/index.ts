@@ -1,4 +1,4 @@
-// types générés depuis contracts/openapi.yaml (npm run types à la racine)
+// types générés depuis openapi.yaml (npm run types à la racine)
 import type { components } from './api'
 
 type Schemas = components['schemas']
