@@ -55,5 +55,6 @@ export const api = {
   getProduct: (id: number) => request<Product>(`/api/products/${id}`),
   getStock: (id: number) =>
     request<Schemas['StockResponse']>(`/api/products/${id}/stock`).then((r) => r.sizes),
+  validateCart: (items: CartLineInput[]) => post<CartValidation>('/api/cart/validate', { items }),
   createOrder: (order: OrderRequest) => post<Order>('/api/orders', order),
 }

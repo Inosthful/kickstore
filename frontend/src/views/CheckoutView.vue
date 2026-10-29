@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { api, ApiError, type StockConflict } from '@/api/client'
 import { saveLastOrder } from '@/composables/lastOrder'
@@ -21,12 +21,17 @@ const fields = [
 ] as const
 
 const submitting = ref(false)
+let ordered = false
 const fieldErrors = ref<Record<string, string>>({})
 const formError = ref<string | null>(null)
 const conflicts = ref<StockConflict[]>([])
 
 const nameOf = (c: StockConflict) =>
   cart.items.value.find((i) => i.productId === c.productId)?.name ?? `Produit ${c.productId}`
+
+watch(cart.count, (count) => {
+  if (count === 0 && !ordered) router.replace({ name: 'catalog' })
+})
 
 async function submit() {
   if (!cart.canCheckout.value || submitting.value) return
@@ -42,6 +47,7 @@ async function submit() {
       address: { street: form.street, postalCode: form.postalCode, city: form.city },
       items: cart.payload.value,
     })
+    ordered = true
     saveLastOrder(order)
     cart.clear()
     router.replace({ name: 'confirmation' })
@@ -53,6 +59,7 @@ async function submit() {
       formError.value = 'Certaines informations sont invalides.'
     } else if (e.status === 409) {
       conflicts.value = e.conflicts
+      await cart.revalidate()
     } else {
       formError.value = e.status === 0 ? 'Le serveur est injoignable, réessaie dans un instant.' : 'Une erreur est survenue, réessaie.'
     }
@@ -75,6 +82,7 @@ async function submit() {
             {{ c.available === 0 ? 'rupture de stock' : `plus que ${c.available} en stock` }}
           </li>
         </ul>
+        <button type="button" class="link" @click="cart.open()">Modifier mon panier</button>
       </div>
       <div v-else-if="formError" class="alert" role="alert">{{ formError }}</div>
 
@@ -94,6 +102,11 @@ async function submit() {
         <span v-if="submitting" class="spinner" aria-hidden="true" />
         {{ submitting ? 'Validation en cours…' : `Confirmer la commande · ${formatPrice(cart.total.value)}` }}
       </button>
+      <p v-if="cart.validating.value" class="hint">Vérification du stock…</p>
+      <p v-else-if="cart.hasIssues.value" class="hint danger">
+        Ton panier contient un article indisponible.
+        <button type="button" class="link" @click="cart.open()">Voir le panier</button>
+      </p>
     </form>
 
     <aside class="summary">

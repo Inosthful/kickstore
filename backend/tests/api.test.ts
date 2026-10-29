@@ -55,6 +55,38 @@ describe('GET /api/products/:id/stock', () => {
   })
 })
 
+describe('POST /api/cart/validate', () => {
+  it('recalcule le prix côté serveur et signale les ruptures', async () => {
+    const res = await request(app)
+      .post('/api/cart/validate')
+      .send({
+        items: [
+          { productId: dunk, size: 42, quantity: 2 },
+          { productId: dunk, size: 43, quantity: 1 },
+          { productId: 9999, size: 42, quantity: 1 },
+        ],
+      })
+
+    expect(res.status).toBe(200)
+    expect(res.body.total).toBe(30000)
+    expect(res.body.valid).toBe(false)
+    expect(res.body.items.map((i: { status: string }) => i.status)).toEqual([
+      'ok',
+      'insufficient_stock',
+      'unavailable',
+    ])
+  })
+
+  it('refuse une quantité hors limites', async () => {
+    const res = await request(app)
+      .post('/api/cart/validate')
+      .send({ items: [{ productId: dunk, size: 42, quantity: 99 }] })
+
+    expect(res.status).toBe(400)
+    expect(res.body.issues[0].path).toBe('items.0.quantity')
+  })
+})
+
 describe('POST /api/orders', () => {
   it('crée la commande, décrémente le stock et enregistre les lignes', async () => {
     const res = await request(app)
