@@ -85,6 +85,7 @@ export interface paths {
          * Valider une commande
          * @description Le stock est re-vérifié puis décrémenté dans une seule transaction.
          *     Si une paire manque, rien n'est enregistré.
+         *     Un code promo invalide ou expiré renvoie une 400 sur `promoCode`.
          */
         post: {
             parameters: {
@@ -105,34 +106,6 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        /**
-                         * @example {
-                         *       "id": 12,
-                         *       "status": "confirmed",
-                         *       "total": 12900,
-                         *       "customer": {
-                         *         "firstName": "Ada",
-                         *         "lastName": "Lovelace",
-                         *         "email": "ada@example.com"
-                         *       },
-                         *       "address": {
-                         *         "street": "1 rue des Sneakers",
-                         *         "postalCode": "75011",
-                         *         "city": "Paris"
-                         *       },
-                         *       "items": [
-                         *         {
-                         *           "productId": 1,
-                         *           "name": "Nike Dunk Low Panda",
-                         *           "size": 42,
-                         *           "quantity": 1,
-                         *           "unitPrice": 12900,
-                         *           "lineTotal": 12900
-                         *         }
-                         *       ],
-                         *       "createdAt": "2026-10-29T10:00:00.000Z"
-                         *     }
-                         */
                         "application/json": components["schemas"]["Order"];
                     };
                 };
@@ -199,7 +172,8 @@ export interface paths {
         put?: never;
         /**
          * Revalider un panier
-         * @description Le serveur recalcule les prix et vérifie le stock de chaque ligne.
+         * @description Le serveur recalcule les prix, vérifie le stock de chaque ligne et applique le code promo.
+         *     Un code refusé ne bloque pas le panier : la réponse reste 200 et `promo.status` l'indique.
          */
         post: {
             parameters: {
@@ -220,24 +194,6 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        /**
-                         * @example {
-                         *       "items": [
-                         *         {
-                         *           "productId": 1,
-                         *           "size": 42,
-                         *           "quantity": 1,
-                         *           "name": "Nike Dunk Low Panda",
-                         *           "unitPrice": 12900,
-                         *           "lineTotal": 12900,
-                         *           "stock": 3,
-                         *           "status": "ok"
-                         *         }
-                         *       ],
-                         *       "total": 12900,
-                         *       "valid": true
-                         *     }
-                         */
                         "application/json": components["schemas"]["CartValidation"];
                     };
                 };
@@ -424,6 +380,19 @@ export interface components {
         };
         CartRequest: {
             items: components["schemas"]["CartLineInput"][];
+            promoCode?: components["schemas"]["PromoCodeInput"];
+        };
+        /**
+         * @description Insensible à la casse
+         * @example KICK10
+         */
+        PromoCodeInput: string;
+        Promo: {
+            code: string;
+            /** @enum {string} */
+            status: "applied" | "invalid" | "expired";
+            /** @description Présent si le code est appliqué */
+            percent?: number;
         };
         CartLine: {
             productId: number;
@@ -438,8 +407,14 @@ export interface components {
         };
         CartValidation: {
             items: components["schemas"]["CartLine"][];
+            /** @description Avant remise */
+            subtotal: number;
+            /** @description 0 sans code appliqué */
+            discount: number;
+            /** @description subtotal - discount */
             total: number;
             valid: boolean;
+            promo?: components["schemas"]["Promo"];
         };
         Customer: {
             firstName: string;
@@ -457,6 +432,7 @@ export interface components {
             customer: components["schemas"]["Customer"];
             address: components["schemas"]["Address"];
             items: components["schemas"]["CartLineInput"][];
+            promoCode?: components["schemas"]["PromoCodeInput"];
         };
         OrderItem: {
             productId: number;
@@ -470,7 +446,10 @@ export interface components {
             id: number;
             /** @enum {string} */
             status: "confirmed";
+            subtotal: number;
+            discount: number;
             total: number;
+            promoCode?: string;
             customer: components["schemas"]["Customer"];
             address: components["schemas"]["Address"];
             items: components["schemas"]["OrderItem"][];
