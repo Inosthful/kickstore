@@ -10,7 +10,7 @@ La fonctionnalité en une phrase :
 
 > Permettre à un acheteur de choisir sa pointure, d'ajouter la paire à son panier et de valider sa commande en s'assurant que le stock est réellement disponible.
 
-J'ai fait le TP seul, donc j'ai tenu les deux rôles. Pour garder l'esprit de l'exercice, le front et le back sont deux projets séparés qui ne communiquent qu'à travers le contrat d'API (`contracts/openapi.yaml`).
+J'ai fait le TP seul, donc j'ai tenu les deux rôles. Pour garder l'esprit de l'exercice, le front et le back sont deux projets séparés qui ne communiquent qu'à travers le contrat d'API (`openapi.yaml`, à la racine du repo).
 
 ## 2. Cadre de travail : Scrum léger + board Kanban
 
@@ -177,7 +177,7 @@ Résultat sur le vrai back, du premier coup :
 Le repo est réorganisé en workspaces npm (#23, PR #24) :
 
 - `api/` (ancien `backend/`) et `client/` (ancien `frontend/`) ;
-- `contracts/openapi.yaml` pour le contrat ;
+- le contrat `openapi.yaml` à la racine du repo ;
 - `shared/types` pour les types générés depuis le contrat (`npm run types`). Avant, seul le front les utilisait. Maintenant l'api type aussi ses réponses avec, donc si le contrat change, c'est l'api ou le client qui ne compile plus ;
 - `docker-compose.yml` pour tout lancer d'une commande (api, client, et le mock Prism en option).
 
