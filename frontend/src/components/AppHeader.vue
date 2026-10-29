@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { useCart } from '@/composables/useCart'
 
-const { count } = useCart()
+const { count, open } = useCart()
 </script>
 
 <template>
   <header class="header">
     <div class="container bar">
       <RouterLink to="/" class="logo">KICK<span>STORE</span></RouterLink>
-      <RouterLink v-if="count > 0" :to="{ name: 'checkout' }" class="cart">
+      <button class="cart" type="button" aria-label="Ouvrir le panier" @click="open()">
         Panier
-        <span class="badge">{{ count }}</span>
-      </RouterLink>
+        <span v-if="count > 0" class="badge">{{ count }}</span>
+      </button>
     </div>
   </header>
 </template>

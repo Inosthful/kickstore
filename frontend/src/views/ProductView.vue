@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { api, ApiError, type Product, type StockSize } from '@/api/client'
 import SizePicker from '@/components/SizePicker.vue'
 import SneakerImage from '@/components/SneakerImage.vue'
@@ -8,7 +8,6 @@ import { MAX_QUANTITY, useCart } from '@/composables/useCart'
 import { formatPrice, formatSize } from '@/utils/format'
 
 const route = useRoute()
-const router = useRouter()
 const cart = useCart()
 
 const id = computed(() => Number(route.params.id))
@@ -68,7 +67,7 @@ const buttonLabel = computed(() => {
 function addToCart() {
   if (!product.value || selected.value === null) return
   cart.add(product.value, selected.value)
-  router.push({ name: 'checkout' })
+  cart.open()
 }
 </script>
 
