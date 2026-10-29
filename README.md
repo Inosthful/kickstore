@@ -62,7 +62,7 @@ npm run mock
 npm run dev:mock -w client
 ```
 
-Sur le mock, ajouter `?prefer=409` (ou `?prefer=400`) à l'URL de la page de commande force la réponse d'erreur correspondante. Pour revenir sur le vrai back, il suffit de relancer `npm run dev:client`. Le détail de la bascule est dans la section 8 du compte-rendu.
+Sur le mock, ajouter `?prefer=409` (ou `?prefer=400`) à l'URL de la page de commande force la réponse d'erreur correspondante. Pour revenir sur le vrai back, il suffit de relancer `npm run dev:client`. Codes promo de la base de démo : `KICK10` (-10 %) et `ETE20` (expiré). Le détail de la bascule est dans la section 8 du compte-rendu.
 
 ## Tests et CI
 
@@ -70,6 +70,6 @@ Sur le mock, ajouter `?prefer=409` (ou `?prefer=400`) à l'URL de la page de com
 npm test
 ```
 
-Les tests tournent sur une base SQLite à part. Ils vérifient les réponses 201 / 400 / 409, que la transaction annule tout si une seule paire manque, et que trois commandes simultanées sur la dernière paire n'en laissent passer qu'une.
+Les tests tournent sur une base SQLite à part. Ils vérifient les réponses 201 / 400 / 409, que la transaction annule tout si une seule paire manque, que trois commandes simultanées sur la dernière paire n'en laissent passer qu'une, et le calcul des codes promo.
 
 On travaille en GitHub Flow : une branche `feature/...` par US, une pull request vers `main`, et on merge en squash seulement quand la CI est verte. Une fois sur `main`, la CD construit les images Docker de l'api et du client et les publie sur le registre GitHub (`ghcr.io/inosthful/kickstore-api` et `kickstore-client`).
