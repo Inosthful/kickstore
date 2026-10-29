@@ -1,0 +1,108 @@
+:root {
+  --bg: #f4f3ef;
+  --surface: #fff;
+  --ink: #111;
+  --muted: #6b6b66;
+  --line: #e4e2db;
+  --ok: #0a7d4b;
+  --danger: #c62828;
+  --radius: 14px;
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color: var(--ink);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  line-height: 1.45;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+.container {
+  width: min(1120px, 100% - 32px);
+  margin-inline: auto;
+}
+
+.page {
+  padding: 32px 0 64px;
+}
+
+.btn {
+  display: inline-block;
+  padding: 15px 24px;
+  border: none;
+  border-radius: 10px;
+  background: var(--ink);
+  color: #fff;
+  font-weight: 700;
+  text-align: center;
+  transition: opacity 0.15s;
+}
+
+.btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.btn:disabled {
+  background: #cfcdc5;
+}
+
+.btn.secondary {
+  background: transparent;
+  border: 1px solid var(--ink);
+  color: var(--ink);
+}
+
+.link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ink);
+  font-size: 14px;
+  text-decoration: underline;
+}
+
+.alert {
+  padding: 14px 16px;
+  border: 1px solid #f0c4c4;
+  border-radius: 10px;
+  background: #fdeeee;
+  color: var(--danger);
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #ebe9e2 25%, #f5f4ef 50%, #ebe9e2 75%);
+  background-size: 200% 100%;
+  border-radius: 8px;
+  animation: shimmer 1.2s infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
