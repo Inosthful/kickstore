@@ -13,7 +13,13 @@ const catalog = [
   { name: 'Chuck 70 High', brand: 'Converse', colorway: 'Egret', color: '#f1ead7', price: 9500, stock: [7, 9, 10, 4, 6, 5, 3] },
 ]
 
+const promoCodes = [
+  { code: 'KICK10', percent: 10 },
+  { code: 'ETE20', percent: 20, expiresAt: new Date('2026-09-01') },
+]
+
 async function main() {
+  await prisma.promoCode.deleteMany()
   await prisma.orderItem.deleteMany()
   await prisma.order.deleteMany()
   await prisma.stock.deleteMany()
@@ -28,7 +34,9 @@ async function main() {
     })
   }
 
-  console.log(`${catalog.length} produits insérés`)
+  await prisma.promoCode.createMany({ data: promoCodes })
+
+  console.log(`${catalog.length} produits et ${promoCodes.length} codes promo insérés`)
 }
 
 main().finally(() => prisma.$disconnect())
