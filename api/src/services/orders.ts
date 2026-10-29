@@ -1,6 +1,7 @@
+import type { Order as OrderResponse, StockConflict } from '@kickstore/shared/types'
 import type { Order, OrderItem, Product } from '@prisma/client'
 import { prisma } from '../db'
-import { outOfStock, type StockConflict } from '../errors'
+import { outOfStock } from '../errors'
 import type { OrderRequest } from '../schemas'
 import { displayName } from './catalog'
 import { mergeLines } from './lines'
@@ -58,10 +59,10 @@ export async function createOrder({ customer, address, items }: OrderRequest) {
   return toOrderResponse(order)
 }
 
-function toOrderResponse(order: OrderWithItems) {
+function toOrderResponse(order: OrderWithItems): OrderResponse {
   return {
     id: order.id,
-    status: 'confirmed' as const,
+    status: 'confirmed',
     total: order.total,
     customer: { firstName: order.firstName, lastName: order.lastName, email: order.email },
     address: { street: order.street, postalCode: order.postalCode, city: order.city },
