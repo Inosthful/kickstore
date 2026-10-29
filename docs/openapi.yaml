@@ -6,6 +6,8 @@ info:
     Accord entre le Front (Vue) et le Back (Express).
     Deux routes essentielles : le stock par pointure et la commande.
     Montants en centimes. Toute erreur renvoie `{ code, message }`.
+
+    Les exemples servent aussi au mock Prism utilisé par le Front (`npm run mock`).
 servers:
   - url: http://localhost:3000
 security: []
@@ -37,8 +39,11 @@ paths:
                 $ref: '#/components/schemas/StockResponse'
               example:
                 sizes:
+                  - { size: 40, stock: 2 }
                   - { size: 41, stock: 0 }
                   - { size: 42, stock: 3 }
+                  - { size: 42.5, stock: 1 }
+                  - { size: 43, stock: 4 }
         '404':
           $ref: '#/components/responses/NotFound'
 
@@ -62,12 +67,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Order'
+              example:
+                id: 12
+                status: confirmed
+                total: 12900
+                customer: { firstName: Ada, lastName: Lovelace, email: ada@example.com }
+                address: { street: 1 rue des Sneakers, postalCode: '75011', city: Paris }
+                items:
+                  - { productId: 1, name: Nike Dunk Low Panda, size: 42, quantity: 1, unitPrice: 12900, lineTotal: 12900 }
+                createdAt: '2026-10-29T10:00:00.000Z'
         '400':
           description: Données invalides, `issues` indique les champs
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              example:
+                code: VALIDATION_ERROR
+                message: Données invalides
+                issues:
+                  - { path: address.postalCode, message: Code postal invalide }
         '409':
           description: Rupture de stock, `conflicts` indique les paires concernées
           content:
@@ -78,7 +97,7 @@ paths:
                 code: OUT_OF_STOCK
                 message: Stock insuffisant pour au moins un article
                 conflicts:
-                  - { productId: 1, size: 42, requested: 2, available: 1 }
+                  - { productId: 1, size: 42, requested: 1, available: 0 }
 
   /api/cart/validate:
     post:
@@ -98,6 +117,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CartValidation'
+              example:
+                items:
+                  - productId: 1
+                    size: 42
+                    quantity: 1
+                    name: Nike Dunk Low Panda
+                    unitPrice: 12900
+                    lineTotal: 12900
+                    stock: 3
+                    status: ok
+                total: 12900
+                valid: true
         '400':
           description: Données invalides
           content:
@@ -122,6 +153,11 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Product'
+              example:
+                products:
+                  - { id: 1, name: Dunk Low, brand: Nike, colorway: Panda, color: '#1b1b1b', price: 12900 }
+                  - { id: 2, name: 1 High, brand: Jordan, colorway: Chicago, color: '#c8102e', price: 18900 }
+                  - { id: 3, name: Samba OG, brand: Adidas, colorway: Cloud White, color: '#e9e4d8', price: 11000 }
 
   /api/products/{id}:
     get:
@@ -136,6 +172,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
+              example: { id: 1, name: Dunk Low, brand: Nike, colorway: Panda, color: '#1b1b1b', price: 12900 }
         '404':
           $ref: '#/components/responses/NotFound'
 
@@ -231,6 +268,8 @@ components:
       properties:
         items:
           type: array
+          minItems: 1
+          maxItems: 20
           items:
             $ref: '#/components/schemas/CartLineInput'
 
@@ -264,17 +303,17 @@ components:
       type: object
       required: [firstName, lastName, email]
       properties:
-        firstName: { type: string }
-        lastName: { type: string }
+        firstName: { type: string, minLength: 1 }
+        lastName: { type: string, minLength: 1 }
         email: { type: string, format: email }
 
     Address:
       type: object
       required: [street, postalCode, city]
       properties:
-        street: { type: string }
-        postalCode: { type: string, example: '75011' }
-        city: { type: string }
+        street: { type: string, minLength: 1 }
+        postalCode: { type: string, pattern: '^\d{5}$', example: '75011' }
+        city: { type: string, minLength: 1 }
 
     OrderRequest:
       type: object
@@ -286,6 +325,8 @@ components:
           $ref: '#/components/schemas/Address'
         items:
           type: array
+          minItems: 1
+          maxItems: 20
           items:
             $ref: '#/components/schemas/CartLineInput'
 

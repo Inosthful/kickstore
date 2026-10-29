@@ -43,12 +43,19 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return body as T
 }
 
-const post = <T>(path: string, data: unknown) =>
+const post = <T>(path: string, data: unknown, headers: Record<string, string> = {}) =>
   request<T>(path, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...headers },
     body: JSON.stringify(data),
   })
+
+// en mode mock, ?prefer=409 dans l'URL force la réponse renvoyée par Prism
+function mockPrefer(): Record<string, string> {
+  if (import.meta.env.VITE_MOCK !== 'true') return {}
+  const code = new URLSearchParams(location.search).get('prefer')
+  return code ? { Prefer: `code=${code}` } : {}
+}
 
 export const api = {
   listProducts: () => request<{ products: Product[] }>('/api/products').then((r) => r.products),
@@ -56,5 +63,5 @@ export const api = {
   getStock: (id: number) =>
     request<Schemas['StockResponse']>(`/api/products/${id}/stock`).then((r) => r.sizes),
   validateCart: (items: CartLineInput[]) => post<CartValidation>('/api/cart/validate', { items }),
-  createOrder: (order: OrderRequest) => post<Order>('/api/orders', order),
+  createOrder: (order: OrderRequest) => post<Order>('/api/orders', order, mockPrefer()),
 }

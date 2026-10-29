@@ -34,6 +34,22 @@ cp .env.example .env
 npm run dev
 ```
 
+## Travailler sans le back (mock Prism)
+
+Le front peut tourner sur un mock généré depuis le contrat, sans lancer le back. Dans deux terminaux :
+
+```bash
+cd frontend
+npm run mock
+```
+
+```bash
+cd frontend
+npm run dev:mock
+```
+
+Sur le mock, ajouter `?prefer=409` (ou `?prefer=400`) à l'URL de la page de commande force la réponse d'erreur correspondante. Pour revenir sur le vrai back, il suffit de relancer `npm run dev`. Le détail de la bascule est dans la section 8 du compte-rendu.
+
 ## Tests
 
 ```bash

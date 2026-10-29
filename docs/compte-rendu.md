@@ -109,3 +109,53 @@ Signé : Enzo Martinez (Front) · Enzo Martinez (Back)
 - **Le plus dur à découper** : l'US 3 dépend en partie du panier de l'US 2. J'ai fait un panier minimal pour pouvoir livrer l'US 3 d'abord, comme le voulait la priorité.
 - **Désaccord sur le « fini »** : côté back, la route de commande paraissait finie dès que les tests passaient, alors que côté front elle ne l'était pas tant que la 409 n'était pas affichée proprement. C'est ce qui m'a fait ajouter le point 4 de la DoD.
 - **Points de synchro qu'on retrouve partout** : les noms de champs, le format des erreurs et le choix de qui calcule les montants (ici, toujours le serveur).
+
+## 8. Séquence 2 : contrat, mock et bascule (US 3)
+
+L'objectif de cette séquence est de pouvoir travailler en parallèle : le front avance sur un mock pendant que le back code le vrai endpoint. J'ai pris l'US 3 (validation de la commande) parce que c'est elle qui a le plus de réponses différentes à gérer : 201, 400 et 409.
+
+### Étape 1 : écrire le contrat
+
+Le contrat existait déjà (`docs/openapi.yaml`), mais il lui manquait deux choses pour être mockable (#20) :
+
+- des exemples réalistes : Prism construit ses réponses à partir des exemples, sans eux le catalogue mocké affichait des produits « string » à 0 € ;
+- les règles de validation (code postal à 5 chiffres, email, champs obligatoires), pour que le mock refuse les mêmes données que le back.
+
+Le back n'a rien eu à changer : ses réponses respectaient déjà ces exemples, et ses tests passent toujours.
+
+### Étape 2 : travailler en parallèle
+
+Le front tourne sur un mock Prism généré directement depuis le contrat (#21) :
+
+```bash
+cd frontend
+npm run mock       # Prism sur http://localhost:4010
+npm run dev:mock   # le front branché sur le mock
+```
+
+Ce que j'ai vérifié sur le mock, sans lancer le back :
+
+- **201** : la commande passe et on arrive sur la confirmation ;
+- **400** : avec un code postal à 2 chiffres, c'est Prism lui-même qui refuse la requête grâce au `pattern` du contrat, et le message s'affiche sous le bon champ ;
+- **409** : un mock n'a pas de stock, donc on ne peut pas provoquer une vraie rupture. En ajoutant `?prefer=409` à l'URL de la page de commande, le front demande à Prism la réponse 409 du contrat, et le message « rupture de stock » s'affiche avec le nom de la paire.
+
+Ce `?prefer=` est la seule chose propre au mock dans le front : il n'est lu qu'en mode mock et n'est jamais envoyé au vrai back.
+
+Les limites du mock, à connaître avant une démo :
+
+- il est statique : la confirmation affiche toujours la commande de l'exemple (« Merci Ada »), pas le nom saisi ;
+- la revalidation du panier renvoie toujours la ligne de l'exemple, donc pour la démo il faut prendre la Nike Dunk Low en 42 ;
+- la 400 renvoie toujours l'erreur de l'exemple (le code postal), quel que soit le champ invalide.
+
+### Étape 3 : basculer et vérifier
+
+La bascule consiste uniquement à relancer le front avec `npm run dev` : l'URL de l'API passe de `localhost:4010` (mock) à `localhost:3000` (vrai back), sans toucher au code.
+
+Résultat sur le vrai back, du premier coup :
+
+- **201** : commande créée en base, confirmation avec le vrai nom et le vrai numéro ;
+- **400** : même message sous le champ code postal qu'avec le mock ;
+- **409** : j'ai mis la dernière Samba en 45 au panier, un autre acheteur l'a achetée via l'API, et ma commande a été refusée avec le message « rupture de stock » ;
+- `?prefer=409` est bien ignoré hors mode mock : la commande passe normalement.
+
+Ça a marché du premier coup parce que le front et le back respectent tous les deux le même contrat, et que les types du front sont générés depuis ce contrat.
