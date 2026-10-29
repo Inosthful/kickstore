@@ -1,0 +1,318 @@
+openapi: 3.1.0
+info:
+  title: KickStore API
+  version: 1.0.0
+  description: |
+    Accord entre le Front (Vue) et le Back (Express).
+    Deux routes essentielles : le stock par pointure et la commande.
+    Montants en centimes. Toute erreur renvoie `{ code, message }`.
+servers:
+  - url: http://localhost:3000
+security: []
+
+tags:
+  - name: Stock
+    description: Essentiel - quelles pointures sont disponibles ?
+  - name: Commande
+    description: Essentiel - valider la commande et décrémenter le stock
+  - name: Panier
+    description: Support - revalider le panier stocké dans le navigateur
+  - name: Catalogue
+    description: Support - afficher les produits
+
+paths:
+  /api/products/{id}/stock:
+    get:
+      tags: [Stock]
+      summary: Stock par pointure
+      description: Une pointure à stock 0 est grisée côté Front.
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '200':
+          description: Pointures et stock
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockResponse'
+              example:
+                sizes:
+                  - { size: 41, stock: 0 }
+                  - { size: 42, stock: 3 }
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/orders:
+    post:
+      tags: [Commande]
+      summary: Valider une commande
+      description: |
+        Le stock est re-vérifié puis décrémenté dans une seule transaction.
+        Si une paire manque, rien n'est enregistré.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+      responses:
+        '201':
+          description: Commande créée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Données invalides, `issues` indique les champs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Rupture de stock, `conflicts` indique les paires concernées
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: OUT_OF_STOCK
+                message: Stock insuffisant pour au moins un article
+                conflicts:
+                  - { productId: 1, size: 42, requested: 2, available: 1 }
+
+  /api/cart/validate:
+    post:
+      tags: [Panier]
+      summary: Revalider un panier
+      description: Le serveur recalcule les prix et vérifie le stock de chaque ligne.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CartRequest'
+      responses:
+        '200':
+          description: Panier recalculé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartValidation'
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/products:
+    get:
+      tags: [Catalogue]
+      summary: Liste des produits
+      responses:
+        '200':
+          description: Catalogue
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [products]
+                properties:
+                  products:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+
+  /api/products/{id}:
+    get:
+      tags: [Catalogue]
+      summary: Détail d'un produit
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '200':
+          description: Le produit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  parameters:
+    ProductId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  responses:
+    NotFound:
+      description: Produit introuvable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: VALIDATION_ERROR, NOT_FOUND, OUT_OF_STOCK ou INTERNAL_ERROR
+        message:
+          type: string
+        issues:
+          type: array
+          description: Présent sur un 400
+          items:
+            type: object
+            required: [path, message]
+            properties:
+              path: { type: string, example: customer.email }
+              message: { type: string }
+        conflicts:
+          type: array
+          description: Présent sur un 409
+          items:
+            $ref: '#/components/schemas/StockConflict'
+
+    StockConflict:
+      type: object
+      required: [productId, size, requested, available]
+      properties:
+        productId: { type: integer }
+        size: { type: number }
+        requested: { type: integer }
+        available: { type: integer }
+
+    Product:
+      type: object
+      required: [id, name, brand, colorway, color, price]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        brand: { type: string }
+        colorway: { type: string }
+        color: { type: string, description: Couleur hex pour l'illustration }
+        price: { type: integer, description: Prix en centimes }
+
+    StockResponse:
+      type: object
+      required: [sizes]
+      properties:
+        sizes:
+          type: array
+          items:
+            $ref: '#/components/schemas/StockSize'
+
+    StockSize:
+      type: object
+      required: [size, stock]
+      properties:
+        size: { type: number, example: 42 }
+        stock: { type: integer, example: 3 }
+
+    CartLineInput:
+      type: object
+      required: [productId, size, quantity]
+      properties:
+        productId: { type: integer }
+        size: { type: number }
+        quantity: { type: integer, minimum: 1, maximum: 5 }
+
+    CartRequest:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartLineInput'
+
+    CartLine:
+      type: object
+      required: [productId, size, quantity, name, unitPrice, lineTotal, stock, status]
+      properties:
+        productId: { type: integer }
+        size: { type: number }
+        quantity: { type: integer }
+        name: { type: string }
+        unitPrice: { type: integer }
+        lineTotal: { type: integer }
+        stock: { type: integer }
+        status:
+          type: string
+          enum: [ok, insufficient_stock, unavailable]
+
+    CartValidation:
+      type: object
+      required: [items, total, valid]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartLine'
+        total: { type: integer }
+        valid: { type: boolean }
+
+    Customer:
+      type: object
+      required: [firstName, lastName, email]
+      properties:
+        firstName: { type: string }
+        lastName: { type: string }
+        email: { type: string, format: email }
+
+    Address:
+      type: object
+      required: [street, postalCode, city]
+      properties:
+        street: { type: string }
+        postalCode: { type: string, example: '75011' }
+        city: { type: string }
+
+    OrderRequest:
+      type: object
+      required: [customer, address, items]
+      properties:
+        customer:
+          $ref: '#/components/schemas/Customer'
+        address:
+          $ref: '#/components/schemas/Address'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartLineInput'
+
+    OrderItem:
+      type: object
+      required: [productId, name, size, quantity, unitPrice, lineTotal]
+      properties:
+        productId: { type: integer }
+        name: { type: string }
+        size: { type: number }
+        quantity: { type: integer }
+        unitPrice: { type: integer }
+        lineTotal: { type: integer }
+
+    Order:
+      type: object
+      required: [id, status, total, customer, address, items, createdAt]
+      properties:
+        id: { type: integer }
+        status: { type: string, enum: [confirmed] }
+        total: { type: integer }
+        customer:
+          $ref: '#/components/schemas/Customer'
+        address:
+          $ref: '#/components/schemas/Address'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        createdAt: { type: string, format: date-time }
