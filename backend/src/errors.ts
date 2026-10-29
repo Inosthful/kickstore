@@ -14,6 +14,16 @@ export class HttpError extends Error {
 
 export const notFound = (message: string) => new HttpError(404, 'NOT_FOUND', message)
 
+export const outOfStock = (conflicts: StockConflict[]) =>
+  new HttpError(409, 'OUT_OF_STOCK', 'Stock insuffisant pour au moins un article', { conflicts })
+
+export interface StockConflict {
+  productId: number
+  size: number
+  requested: number
+  available: number
+}
+
 export function parse<T>(schema: ZodType<T>, data: unknown): T {
   const result = schema.safeParse(data)
   if (result.success) return result.data
