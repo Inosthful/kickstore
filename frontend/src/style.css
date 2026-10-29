@@ -94,6 +94,24 @@ button:disabled {
   color: var(--danger);
 }
 
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 8px;
+  vertical-align: -2px;
+  border: 2px solid rgb(255 255 255 / 40%);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .skeleton {
   background: linear-gradient(90deg, #ebe9e2 25%, #f5f4ef 50%, #ebe9e2 75%);
   background-size: 200% 100%;

@@ -1,5 +1,9 @@
+import type { Product } from '@prisma/client'
 import { prisma } from '../db'
 import { notFound } from '../errors'
+
+export const displayName = (p: Pick<Product, 'brand' | 'name' | 'colorway'>) =>
+  `${p.brand} ${p.name} ${p.colorway}`
 
 export const listProducts = () => prisma.product.findMany({ orderBy: { id: 'asc' } })
 

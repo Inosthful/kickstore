@@ -43,9 +43,17 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return body as T
 }
 
+const post = <T>(path: string, data: unknown) =>
+  request<T>(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+
 export const api = {
   listProducts: () => request<{ products: Product[] }>('/api/products').then((r) => r.products),
   getProduct: (id: number) => request<Product>(`/api/products/${id}`),
   getStock: (id: number) =>
     request<Schemas['StockResponse']>(`/api/products/${id}/stock`).then((r) => r.sizes),
+  createOrder: (order: OrderRequest) => post<Order>('/api/orders', order),
 }
