@@ -46,6 +46,7 @@ async function submit() {
       customer: { firstName: form.firstName, lastName: form.lastName, email: form.email },
       address: { street: form.street, postalCode: form.postalCode, city: form.city },
       items: cart.payload.value,
+      promoCode: cart.appliedCode.value,
     })
     ordered = true
     saveLastOrder(order)
@@ -54,7 +55,10 @@ async function submit() {
   } catch (e) {
     if (!(e instanceof ApiError)) throw e
 
-    if (e.status === 400) {
+    if (e.status === 400 && e.issues.some((i) => i.path === 'promoCode')) {
+      formError.value = "Ton code promo n'est plus valable, le total a été mis à jour."
+      await cart.revalidate()
+    } else if (e.status === 400) {
       fieldErrors.value = Object.fromEntries(e.issues.map((i) => [i.path, i.message]))
       formError.value = 'Certaines informations sont invalides.'
     } else if (e.status === 409) {
@@ -117,6 +121,13 @@ async function submit() {
           <span>{{ formatPrice(item.unitPrice * item.quantity) }}</span>
         </li>
       </ul>
+      <template v-if="cart.discount.value > 0">
+        <div class="row"><span>Sous-total</span><span>{{ formatPrice(cart.subtotal.value) }}</span></div>
+        <div class="row discount">
+          <span>Code {{ cart.appliedCode.value }}</span>
+          <span>−{{ formatPrice(cart.discount.value) }}</span>
+        </div>
+      </template>
       <div class="total">
         <span>Total</span>
         <strong>{{ formatPrice(cart.total.value) }}</strong>
@@ -218,10 +229,25 @@ small {
 }
 
 .summary li,
+.row,
 .total {
   display: flex;
   justify-content: space-between;
   gap: 12px;
+}
+
+.row {
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.row + .row {
+  margin-top: 4px;
+}
+
+.row.discount {
+  color: var(--ok);
 }
 
 .total {

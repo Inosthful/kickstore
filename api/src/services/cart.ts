@@ -3,8 +3,9 @@ import { prisma } from '../db'
 import type { CartLineInput } from '../schemas'
 import { displayName } from './catalog'
 import { mergeLines } from './lines'
+import { checkPromo, discountFor } from './promo'
 
-export async function validateCart(input: CartLineInput[]): Promise<CartValidation> {
+export async function validateCart(input: CartLineInput[], promoCode?: string): Promise<CartValidation> {
   const lines = mergeLines(input)
   const products = await prisma.product.findMany({
     where: { id: { in: lines.map((l) => l.productId) } },
@@ -29,9 +30,16 @@ export async function validateCart(input: CartLineInput[]): Promise<CartValidati
     }
   })
 
+  const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0)
+  const promo = promoCode ? await checkPromo(promoCode) : undefined
+  const discount = discountFor(subtotal, promo)
+
   return {
     items,
-    total: items.reduce((sum, item) => sum + item.lineTotal, 0),
+    subtotal,
+    discount,
+    total: subtotal - discount,
     valid: items.every((item) => item.status === 'ok'),
+    promo,
   }
 }

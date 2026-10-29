@@ -12,7 +12,9 @@ const cartLine = z.object({
 
 const lines = z.array(cartLine).min(1, 'Panier vide').max(20)
 
-export const cartRequestSchema = z.object({ items: lines })
+const promoCode = z.string().trim().toUpperCase().min(1).max(20).optional()
+
+export const cartRequestSchema = z.object({ items: lines, promoCode })
 
 export const orderRequestSchema = z.object({
   customer: z.object({
@@ -26,6 +28,7 @@ export const orderRequestSchema = z.object({
     city: text,
   }),
   items: lines,
+  promoCode,
 })
 
 export type CartLineInput = z.infer<typeof cartLine>

@@ -37,9 +37,17 @@ model Order {
   postalCode String
   city       String
   total      Int
+  discount   Int         @default(0)
+  promoCode  String?
   status     String      @default("confirmed")
   createdAt  DateTime    @default(now())
   items      OrderItem[]
+}
+
+model PromoCode {
+  code      String    @id
+  percent   Int
+  expiresAt DateTime?
 }
 
 model OrderItem {

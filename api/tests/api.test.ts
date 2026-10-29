@@ -68,7 +68,7 @@ describe('POST /api/cart/validate', () => {
       })
 
     expect(res.status).toBe(200)
-    expect(res.body.total).toBe(30000)
+    expect(res.body).toMatchObject({ subtotal: 30000, discount: 0, total: 30000 })
     expect(res.body.valid).toBe(false)
     expect(res.body.items.map((i: { status: string }) => i.status)).toEqual([
       'ok',
@@ -155,5 +155,64 @@ describe('POST /api/orders', () => {
     expect(statuses).toEqual([201, 409, 409])
     expect(await stockOf(samba, 40)).toBe(0)
     expect(await prisma.order.count()).toBe(1)
+  })
+})
+
+describe('code promo', () => {
+  beforeEach(async () => {
+    await prisma.promoCode.deleteMany()
+    await prisma.promoCode.createMany({
+      data: [
+        { code: 'KICK10', percent: 10 },
+        { code: 'ETE20', percent: 20, expiresAt: new Date('2020-01-01') },
+      ],
+    })
+  })
+
+  it('applique la remise dans le panier, quelle que soit la casse', async () => {
+    const res = await request(app)
+      .post('/api/cart/validate')
+      .send({ items: [{ productId: dunk, size: 42, quantity: 2 }], promoCode: 'kick10' })
+
+    expect(res.status).toBe(200)
+    expect(res.body).toMatchObject({
+      subtotal: 20000,
+      discount: 2000,
+      total: 18000,
+      promo: { code: 'KICK10', status: 'applied', percent: 10 },
+    })
+  })
+
+  it('ne bloque pas le panier avec un code expiré ou inconnu', async () => {
+    for (const [code, status] of [['ETE20', 'expired'], ['NIMPORTE', 'invalid']]) {
+      const res = await request(app)
+        .post('/api/cart/validate')
+        .send({ items: [{ productId: dunk, size: 42, quantity: 1 }], promoCode: code })
+
+      expect(res.status).toBe(200)
+      expect(res.body).toMatchObject({ discount: 0, total: 10000, valid: true, promo: { status } })
+    }
+  })
+
+  it('enregistre la remise avec la commande', async () => {
+    const res = await request(app)
+      .post('/api/orders')
+      .send({ customer, address, items: [{ productId: dunk, size: 42, quantity: 1 }], promoCode: 'KICK10' })
+
+    expect(res.status).toBe(201)
+    expect(res.body).toMatchObject({ subtotal: 10000, discount: 1000, total: 9000, promoCode: 'KICK10' })
+    const order = await prisma.order.findUniqueOrThrow({ where: { id: res.body.id } })
+    expect(order).toMatchObject({ total: 9000, discount: 1000, promoCode: 'KICK10' })
+  })
+
+  it('refuse la commande avec un code expiré sans toucher au stock', async () => {
+    const res = await request(app)
+      .post('/api/orders')
+      .send({ customer, address, items: [{ productId: dunk, size: 42, quantity: 1 }], promoCode: 'ETE20' })
+
+    expect(res.status).toBe(400)
+    expect(res.body.issues).toEqual([{ path: 'promoCode', message: 'Code promo expiré' }])
+    expect(await stockOf(dunk, 42)).toBe(3)
+    expect(await prisma.order.count()).toBe(0)
   })
 })

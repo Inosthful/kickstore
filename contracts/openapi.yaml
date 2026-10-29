@@ -6,6 +6,7 @@ info:
     Accord entre le Front (Vue) et le Back (Express).
     Deux routes essentielles : le stock par pointure et la commande.
     Montants en centimes. Toute erreur renvoie `{ code, message }`.
+    Les remises (code promo) sont toujours calculées par le serveur.
 
     Les exemples servent aussi au mock Prism utilisé par le Front (`npm run mock`).
 servers:
@@ -54,6 +55,7 @@ paths:
       description: |
         Le stock est re-vérifié puis décrémenté dans une seule transaction.
         Si une paire manque, rien n'est enregistré.
+        Un code promo invalide ou expiré renvoie une 400 sur `promoCode`.
       requestBody:
         required: true
         content:
@@ -67,15 +69,32 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Order'
-              example:
-                id: 12
-                status: confirmed
-                total: 12900
-                customer: { firstName: Ada, lastName: Lovelace, email: ada@example.com }
-                address: { street: 1 rue des Sneakers, postalCode: '75011', city: Paris }
-                items:
-                  - { productId: 1, name: Nike Dunk Low Panda, size: 42, quantity: 1, unitPrice: 12900, lineTotal: 12900 }
-                createdAt: '2026-10-29T10:00:00.000Z'
+              examples:
+                sans-code:
+                  value:
+                    id: 12
+                    status: confirmed
+                    subtotal: 12900
+                    discount: 0
+                    total: 12900
+                    customer: { firstName: Ada, lastName: Lovelace, email: ada@example.com }
+                    address: { street: 1 rue des Sneakers, postalCode: '75011', city: Paris }
+                    items:
+                      - { productId: 1, name: Nike Dunk Low Panda, size: 42, quantity: 1, unitPrice: 12900, lineTotal: 12900 }
+                    createdAt: '2026-10-29T10:00:00.000Z'
+                code-promo:
+                  value:
+                    id: 13
+                    status: confirmed
+                    subtotal: 12900
+                    discount: 1290
+                    total: 11610
+                    promoCode: KICK10
+                    customer: { firstName: Ada, lastName: Lovelace, email: ada@example.com }
+                    address: { street: 1 rue des Sneakers, postalCode: '75011', city: Paris }
+                    items:
+                      - { productId: 1, name: Nike Dunk Low Panda, size: 42, quantity: 1, unitPrice: 12900, lineTotal: 12900 }
+                    createdAt: '2026-10-29T10:00:00.000Z'
         '400':
           description: Données invalides, `issues` indique les champs
           content:
@@ -103,7 +122,9 @@ paths:
     post:
       tags: [Panier]
       summary: Revalider un panier
-      description: Le serveur recalcule les prix et vérifie le stock de chaque ligne.
+      description: |
+        Le serveur recalcule les prix, vérifie le stock de chaque ligne et applique le code promo.
+        Un code refusé ne bloque pas le panier : la réponse reste 200 et `promo.status` l'indique.
       requestBody:
         required: true
         content:
@@ -117,18 +138,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CartValidation'
-              example:
-                items:
-                  - productId: 1
-                    size: 42
-                    quantity: 1
-                    name: Nike Dunk Low Panda
-                    unitPrice: 12900
-                    lineTotal: 12900
-                    stock: 3
-                    status: ok
-                total: 12900
-                valid: true
+              examples:
+                sans-code:
+                  value:
+                    items:
+                      - { productId: 1, size: 42, quantity: 1, name: Nike Dunk Low Panda, unitPrice: 12900, lineTotal: 12900, stock: 3, status: ok }
+                    subtotal: 12900
+                    discount: 0
+                    total: 12900
+                    valid: true
+                code-promo:
+                  value:
+                    items:
+                      - { productId: 1, size: 42, quantity: 1, name: Nike Dunk Low Panda, unitPrice: 12900, lineTotal: 12900, stock: 3, status: ok }
+                    subtotal: 12900
+                    discount: 1290
+                    total: 11610
+                    valid: true
+                    promo: { code: KICK10, status: applied, percent: 10 }
         '400':
           description: Données invalides
           content:
@@ -272,6 +299,27 @@ components:
           maxItems: 20
           items:
             $ref: '#/components/schemas/CartLineInput'
+        promoCode:
+          $ref: '#/components/schemas/PromoCodeInput'
+
+    PromoCodeInput:
+      type: string
+      minLength: 1
+      maxLength: 20
+      description: Insensible à la casse
+      example: KICK10
+
+    Promo:
+      type: object
+      required: [code, status]
+      properties:
+        code: { type: string }
+        status:
+          type: string
+          enum: [applied, invalid, expired]
+        percent:
+          type: integer
+          description: Présent si le code est appliqué
 
     CartLine:
       type: object
@@ -290,14 +338,18 @@ components:
 
     CartValidation:
       type: object
-      required: [items, total, valid]
+      required: [items, subtotal, discount, total, valid]
       properties:
         items:
           type: array
           items:
             $ref: '#/components/schemas/CartLine'
-        total: { type: integer }
+        subtotal: { type: integer, description: Avant remise }
+        discount: { type: integer, description: 0 sans code appliqué }
+        total: { type: integer, description: subtotal - discount }
         valid: { type: boolean }
+        promo:
+          $ref: '#/components/schemas/Promo'
 
     Customer:
       type: object
@@ -329,6 +381,8 @@ components:
           maxItems: 20
           items:
             $ref: '#/components/schemas/CartLineInput'
+        promoCode:
+          $ref: '#/components/schemas/PromoCodeInput'
 
     OrderItem:
       type: object
@@ -343,11 +397,14 @@ components:
 
     Order:
       type: object
-      required: [id, status, total, customer, address, items, createdAt]
+      required: [id, status, subtotal, discount, total, customer, address, items, createdAt]
       properties:
         id: { type: integer }
         status: { type: string, enum: [confirmed] }
+        subtotal: { type: integer }
+        discount: { type: integer }
         total: { type: integer }
+        promoCode: { type: string }
         customer:
           $ref: '#/components/schemas/Customer'
         address:
