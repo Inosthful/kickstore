@@ -6,32 +6,48 @@ Le compte-rendu (user stories, points de synchro, DoD, MoSCoW) est dans [docs/co
 
 ## Organisation
 
-- `docs/openapi.yaml` : le contrat d'API, écrit avant le code
-- `backend/` : API Express en TypeScript, Prisma sur SQLite
-- `frontend/` : Vue 3 + Vite
+C'est un mono-repo (workspaces npm) :
 
-Le front et le back sont deux projets séparés. Le front ne connaît le back qu'à travers le contrat : ses types TypeScript sont générés depuis `openapi.yaml` (`npm run api:types`), donc si le contrat change sans que le front suive, il ne compile plus.
+```
+api/                 API Express en TypeScript, Prisma sur SQLite
+client/              front Vue 3 + Vite
+shared/types/        types TypeScript générés depuis le contrat, utilisés par l'api et le client
+contracts/           le contrat d'API (openapi.yaml), écrit avant le code
+.github/workflows/   CI (lint du contrat, tests de l'api, build du client) et CD (images Docker)
+docker-compose.yml   api + client, et le mock Prism en option
+docs/                compte-rendu du TP
+```
+
+Le front et le back ne se parlent qu'à travers le contrat. `npm run types` régénère `shared/types` depuis `contracts/openapi.yaml`, et l'api comme le client typent leurs réponses avec ces types : si le contrat change sans qu'un des deux côtés suive, il ne compile plus. La CI vérifie aussi que les types partagés sont à jour avec le contrat.
 
 ## Lancer le projet
 
-Le back, sur http://localhost:3000 (la doc Swagger du contrat est sur `/docs`) :
+Le plus simple, avec Docker :
 
 ```bash
-cd backend
-npm install
-cp .env.example .env
-npm run db:push
-npm run db:seed
-npm run dev
+docker compose up --build
 ```
 
-Le front, sur http://localhost:5173 :
+Le client est sur http://localhost:8080 et l'api sur http://localhost:3000 (la doc Swagger du contrat est sur `/docs`). La base est recréée avec les données de démo à chaque démarrage.
+
+Sans Docker, on installe tout depuis la racine :
 
 ```bash
-cd frontend
 npm install
-cp .env.example .env
-npm run dev
+cp api/.env.example api/.env
+cp client/.env.example client/.env
+npm run db:push -w api
+npm run db:seed -w api
+```
+
+Puis dans deux terminaux :
+
+```bash
+npm run dev:api
+```
+
+```bash
+npm run dev:client
 ```
 
 ## Travailler sans le back (mock Prism)
@@ -39,22 +55,21 @@ npm run dev
 Le front peut tourner sur un mock généré depuis le contrat, sans lancer le back. Dans deux terminaux :
 
 ```bash
-cd frontend
 npm run mock
 ```
 
 ```bash
-cd frontend
-npm run dev:mock
+npm run dev:mock -w client
 ```
 
-Sur le mock, ajouter `?prefer=409` (ou `?prefer=400`) à l'URL de la page de commande force la réponse d'erreur correspondante. Pour revenir sur le vrai back, il suffit de relancer `npm run dev`. Le détail de la bascule est dans la section 8 du compte-rendu.
+Sur le mock, ajouter `?prefer=409` (ou `?prefer=400`) à l'URL de la page de commande force la réponse d'erreur correspondante. Pour revenir sur le vrai back, il suffit de relancer `npm run dev:client`. Le détail de la bascule est dans la section 8 du compte-rendu.
 
-## Tests
+## Tests et CI
 
 ```bash
-cd backend
 npm test
 ```
 
 Les tests tournent sur une base SQLite à part. Ils vérifient les réponses 201 / 400 / 409, que la transaction annule tout si une seule paire manque, et que trois commandes simultanées sur la dernière paire n'en laissent passer qu'une.
+
+On travaille en GitHub Flow : une branche `feature/...` par US, une pull request vers `main`, et on merge en squash seulement quand la CI est verte. Une fois sur `main`, la CD construit les images Docker de l'api et du client et les publie sur le registre GitHub (`ghcr.io/inosthful/kickstore-api` et `kickstore-client`).

@@ -1,3 +1,4 @@
+import type { StockConflict } from '@kickstore/shared/types'
 import type { ErrorRequestHandler } from 'express'
 import type { ZodType } from 'zod'
 
@@ -16,13 +17,6 @@ export const notFound = (message: string) => new HttpError(404, 'NOT_FOUND', mes
 
 export const outOfStock = (conflicts: StockConflict[]) =>
   new HttpError(409, 'OUT_OF_STOCK', 'Stock insuffisant pour au moins un article', { conflicts })
-
-export interface StockConflict {
-  productId: number
-  size: number
-  requested: number
-  available: number
-}
 
 export function parse<T>(schema: ZodType<T>, data: unknown): T {
   const result = schema.safeParse(data)

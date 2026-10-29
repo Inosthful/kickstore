@@ -1,0 +1,23 @@
+{
+  "name": "kickstore",
+  "private": true,
+  "workspaces": [
+    "api",
+    "client",
+    "shared"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev -w api",
+    "dev:client": "npm run dev -w client",
+    "mock": "npm run mock -w client",
+    "types": "openapi-typescript contracts/openapi.yaml -o shared/types/api.d.ts",
+    "lint:contract": "redocly lint contracts/openapi.yaml",
+    "typecheck": "npm run typecheck -w api && npm run typecheck -w client",
+    "test": "npm test -w api",
+    "build": "npm run build -w client"
+  },
+  "devDependencies": {
+    "@redocly/cli": "^2.72.1",
+    "openapi-typescript": "^7.13.0"
+  }
+}

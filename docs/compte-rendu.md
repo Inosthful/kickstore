@@ -10,7 +10,7 @@ La fonctionnalité en une phrase :
 
 > Permettre à un acheteur de choisir sa pointure, d'ajouter la paire à son panier et de valider sa commande en s'assurant que le stock est réellement disponible.
 
-J'ai fait le TP seul, donc j'ai tenu les deux rôles. Pour garder l'esprit de l'exercice, le front et le back sont deux projets séparés qui ne communiquent qu'à travers le contrat d'API (`docs/openapi.yaml`).
+J'ai fait le TP seul, donc j'ai tenu les deux rôles. Pour garder l'esprit de l'exercice, le front et le back sont deux projets séparés qui ne communiquent qu'à travers le contrat d'API (`contracts/openapi.yaml`).
 
 ## 2. Cadre de travail : Scrum léger + board Kanban
 
@@ -116,7 +116,7 @@ L'objectif de cette séquence est de pouvoir travailler en parallèle : le front
 
 ### Étape 1 : écrire le contrat
 
-Le contrat existait déjà (`docs/openapi.yaml`), mais il lui manquait deux choses pour être mockable (#20) :
+Le contrat existait déjà (`openapi.yaml`), mais il lui manquait deux choses pour être mockable (#20) :
 
 - des exemples réalistes : Prism construit ses réponses à partir des exemples, sans eux le catalogue mocké affichait des produits « string » à 0 € ;
 - les règles de validation (code postal à 5 chiffres, email, champs obligatoires), pour que le mock refuse les mêmes données que le back.
@@ -128,7 +128,7 @@ Le back n'a rien eu à changer : ses réponses respectaient déjà ces exemples,
 Le front tourne sur un mock Prism généré directement depuis le contrat (#21) :
 
 ```bash
-cd frontend
+cd client
 npm run mock       # Prism sur http://localhost:4010
 npm run dev:mock   # le front branché sur le mock
 ```

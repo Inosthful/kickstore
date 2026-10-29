@@ -1,0 +1,31 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      FRONT_URL: http://localhost:8080
+
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+      args:
+        VITE_API_URL: http://localhost:3000
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+  # front sur le mock : docker compose --profile mock up mock
+  mock:
+    image: stoplight/prism:5
+    command: mock -h 0.0.0.0 /contracts/openapi.yaml
+    volumes:
+      - ./contracts:/contracts:ro
+    ports:
+      - "4010:4010"
+    profiles:
+      - mock

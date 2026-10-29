@@ -1,16 +1,17 @@
-import type { components } from './schema'
+import type {
+  ApiErrorBody,
+  CartLineInput,
+  CartValidation,
+  Order,
+  OrderRequest,
+  Product,
+  StockConflict,
+  StockResponse,
+} from '@kickstore/shared/types'
 
-type Schemas = components['schemas']
+export type * from '@kickstore/shared/types'
 
-export type Product = Schemas['Product']
-export type StockSize = Schemas['StockSize']
-export type CartLine = Schemas['CartLine']
-export type CartLineInput = Schemas['CartLineInput']
-export type CartValidation = Schemas['CartValidation']
-export type OrderRequest = Schemas['OrderRequest']
-export type Order = Schemas['Order']
-export type StockConflict = Schemas['StockConflict']
-type ErrorBody = Partial<Schemas['Error']>
+type ErrorBody = Partial<ApiErrorBody>
 
 const baseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
@@ -61,7 +62,7 @@ export const api = {
   listProducts: () => request<{ products: Product[] }>('/api/products').then((r) => r.products),
   getProduct: (id: number) => request<Product>(`/api/products/${id}`),
   getStock: (id: number) =>
-    request<Schemas['StockResponse']>(`/api/products/${id}/stock`).then((r) => r.sizes),
+    request<StockResponse>(`/api/products/${id}/stock`).then((r) => r.sizes),
   validateCart: (items: CartLineInput[]) => post<CartValidation>('/api/cart/validate', { items }),
   createOrder: (order: OrderRequest) => post<Order>('/api/orders', order, mockPrefer()),
 }
