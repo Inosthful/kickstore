@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCart } from '@/composables/useCart'
 import { formatPrice, formatSize } from '@/utils/format'
@@ -7,9 +7,12 @@ import SneakerImage from './SneakerImage.vue'
 
 const router = useRouter()
 const {
-  items, isOpen, validating, validationFailed, total, canCheckout,
+  items, isOpen, validating, validationFailed, subtotal, discount, total, canCheckout,
+  promo, promoCode, appliedCode, applyPromo, removePromo,
   lineFor, maxFor, setQuantity, remove, close,
 } = useCart()
+
+const code = ref(promoCode.value)
 
 function checkout() {
   close()
@@ -66,6 +69,21 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
           </ul>
 
           <footer v-if="items.length > 0">
+            <div v-if="appliedCode" class="promo-applied">
+              <span>Code <strong>{{ appliedCode }}</strong> appliqué (−{{ promo?.percent }} %)</span>
+              <button type="button" class="link" @click="removePromo(); code = ''">Retirer</button>
+            </div>
+            <form v-else class="promo-form" @submit.prevent="applyPromo(code)">
+              <input v-model="code" placeholder="Code promo" aria-label="Code promo" />
+              <button type="submit" class="btn secondary" :disabled="!code.trim()">Appliquer</button>
+            </form>
+            <p v-if="promo?.status === 'invalid'" class="issue">Le code {{ promo.code }} n'existe pas.</p>
+            <p v-else-if="promo?.status === 'expired'" class="issue">Le code {{ promo.code }} a expiré.</p>
+
+            <template v-if="discount > 0">
+              <div class="row"><span>Sous-total</span><span>{{ formatPrice(subtotal) }}</span></div>
+              <div class="row discount"><span>Remise</span><span>−{{ formatPrice(discount) }}</span></div>
+            </template>
             <div class="total">
               <span>Total</span>
               <strong>{{ formatPrice(total) }}</strong>
@@ -197,10 +215,51 @@ footer {
   border-top: 1px solid var(--line);
 }
 
+.promo-form {
+  display: flex;
+  gap: 8px;
+}
+
+.promo-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  text-transform: uppercase;
+}
+
+.promo-form .btn {
+  width: auto;
+}
+
+.promo-applied {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.row + .row {
+  margin-top: 4px;
+}
+
+.row.discount {
+  color: var(--ok);
+}
+
 .total {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin: 12px 0;
   font-size: 18px;
 }
 

@@ -51,11 +51,13 @@ const post = <T>(path: string, data: unknown, headers: Record<string, string> = 
     body: JSON.stringify(data),
   })
 
-// en mode mock, ?prefer=409 dans l'URL force la réponse renvoyée par Prism
-function mockPrefer(): Record<string, string> {
+// en mode mock, ?prefer=409 dans l'URL force la réponse renvoyée par Prism,
+// et un code promo fait renvoyer l'exemple « code-promo » du contrat
+function mockPrefer(promoCode?: string): Record<string, string> {
   if (import.meta.env.VITE_MOCK !== 'true') return {}
   const code = new URLSearchParams(location.search).get('prefer')
-  return code ? { Prefer: `code=${code}` } : {}
+  if (code) return { Prefer: `code=${code}` }
+  return promoCode ? { Prefer: 'example=code-promo' } : {}
 }
 
 export const api = {
@@ -63,6 +65,7 @@ export const api = {
   getProduct: (id: number) => request<Product>(`/api/products/${id}`),
   getStock: (id: number) =>
     request<StockResponse>(`/api/products/${id}/stock`).then((r) => r.sizes),
-  validateCart: (items: CartLineInput[]) => post<CartValidation>('/api/cart/validate', { items }),
-  createOrder: (order: OrderRequest) => post<Order>('/api/orders', order, mockPrefer()),
+  validateCart: (items: CartLineInput[], promoCode?: string) =>
+    post<CartValidation>('/api/cart/validate', { items, promoCode }, mockPrefer(promoCode)),
+  createOrder: (order: OrderRequest) => post<Order>('/api/orders', order, mockPrefer(order.promoCode)),
 }

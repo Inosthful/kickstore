@@ -1,5 +1,5 @@
 import { computed, ref, watch } from 'vue'
-import { api, type CartLine, type Product } from '@/api/client'
+import { api, type CartLine, type Product, type Promo } from '@/api/client'
 
 export interface CartItem {
   productId: number
@@ -12,6 +12,7 @@ export interface CartItem {
 
 export const MAX_QUANTITY = 5
 const STORAGE_KEY = 'kickstore.cart'
+const PROMO_KEY = 'kickstore.promo'
 
 const keyOf = (item: { productId: number; size: number }) => `${item.productId}:${item.size}`
 const clamp = (quantity: number) => Math.min(MAX_QUANTITY, Math.max(1, quantity))
@@ -29,6 +30,9 @@ function load(): CartItem[] {
 }
 
 const items = ref<CartItem[]>(load())
+const promoCode = ref(localStorage.getItem(PROMO_KEY) ?? '')
+const promo = ref<Promo | null>(null)
+const discount = ref(0)
 const lines = ref<Record<string, CartLine>>({})
 const validating = ref(items.value.length > 0)
 const validationFailed = ref(false)
@@ -42,6 +46,8 @@ async function revalidate() {
 
   if (items.value.length === 0) {
     lines.value = {}
+    promo.value = null
+    discount.value = 0
     validating.value = false
     validationFailed.value = false
     return
@@ -53,9 +59,12 @@ async function revalidate() {
   try {
     const result = await api.validateCart(
       items.value.map(({ productId, size, quantity }) => ({ productId, size, quantity })),
+      promoCode.value || undefined,
     )
     if (request !== lastRequest) return
 
+    promo.value = result.promo ?? null
+    discount.value = result.discount
     lines.value = Object.fromEntries(result.items.map((line) => [keyOf(line), line]))
     for (const item of items.value) {
       const line = lines.value[keyOf(item)]
@@ -73,6 +82,11 @@ async function revalidate() {
 }
 
 watch(items, () => localStorage.setItem(STORAGE_KEY, JSON.stringify(items.value)), { deep: true })
+watch(promoCode, (code) => {
+  if (code) localStorage.setItem(PROMO_KEY, code)
+  else localStorage.removeItem(PROMO_KEY)
+  revalidate()
+})
 
 watch(
   () => items.value.map((i) => `${keyOf(i)}x${i.quantity}`).join(),
@@ -91,7 +105,9 @@ revalidate()
 
 export function useCart() {
   const count = computed(() => items.value.reduce((n, i) => n + i.quantity, 0))
-  const total = computed(() => items.value.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0))
+  const subtotal = computed(() => items.value.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0))
+  const total = computed(() => subtotal.value - discount.value)
+  const appliedCode = computed(() => (promo.value?.status === 'applied' ? promo.value.code : undefined))
   const hasIssues = computed(() => items.value.some((i) => lines.value[keyOf(i)]?.status !== 'ok'))
   const canCheckout = computed(
     () => items.value.length > 0 && !validating.value && !validationFailed.value && !hasIssues.value,
@@ -136,6 +152,13 @@ export function useCart() {
 
   const clear = () => {
     items.value = []
+    promoCode.value = ''
+  }
+
+  const applyPromo = (code: string) => {
+    const next = code.trim().toUpperCase()
+    if (next === promoCode.value) revalidate()
+    else promoCode.value = next
   }
 
   return {
@@ -144,7 +167,12 @@ export function useCart() {
     validating,
     validationFailed,
     count,
+    subtotal,
+    discount,
     total,
+    promo,
+    promoCode,
+    appliedCode,
     hasIssues,
     canCheckout,
     payload,
@@ -155,6 +183,8 @@ export function useCart() {
     setQuantity,
     remove,
     clear,
+    applyPromo,
+    removePromo: () => applyPromo(''),
     revalidate,
     open: () => (isOpen.value = true),
     close: () => (isOpen.value = false),

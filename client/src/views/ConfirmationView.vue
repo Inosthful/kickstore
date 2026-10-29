@@ -20,6 +20,10 @@ const order = readLastOrder()!
       </li>
     </ul>
 
+    <template v-if="order.discount > 0">
+      <div class="row"><span>Sous-total</span><span>{{ formatPrice(order.subtotal) }}</span></div>
+      <div class="row"><span>Code {{ order.promoCode }}</span><span>−{{ formatPrice(order.discount) }}</span></div>
+    </template>
     <div class="total">
       <span>Total</span>
       <strong>{{ formatPrice(order.total) }}</strong>
@@ -71,10 +75,15 @@ ul {
 }
 
 li,
+.row,
 .total {
   display: flex;
   justify-content: space-between;
   gap: 12px;
+}
+
+.row {
+  color: var(--muted);
 }
 
 .total {
