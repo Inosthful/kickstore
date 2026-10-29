@@ -20,7 +20,7 @@ En reprenant les trois questions du cours :
 - j'ai besoin de jalons pour resynchroniser front et back (contrat validé avant de coder, recette croisée à la fin) → Scrum ;
 - le périmètre est fixé par le TP, donc prévisible → Scrum.
 
-J'ai donc fait un seul sprint qui couvre le périmètre du TP. Le suivi se fait sur un board Kanban dans GitHub Projects (Backlog → À faire → En cours → Review → Terminé), avec un ticket par tâche FRONT, BACK ou SYNC. Les tickets SYNC passent toujours en premier : tant que le contrat n'est pas validé, les tâches front et back de la même US restent bloquées.
+J'ai donc fait un seul sprint qui couvre le périmètre du TP. Le suivi se fait sur un [board Kanban dans GitHub Projects](https://github.com/users/Inosthful/projects/2) (Backlog → À faire → En cours → Review → Terminé), avec un ticket par tâche FRONT, BACK ou SYNC. Chaque ticket reprend ses critères d'acceptation, son point de synchro et ses dépendances, et chaque US est fermée par une pull request. Les tickets SYNC passent toujours en premier : tant que le contrat n'est pas validé, les tâches front et back de la même US restent bloquées.
 
 ## 3. User stories
 
@@ -83,6 +83,8 @@ Restée dans le backlog. Le point de synchro à trancher avant de la commencer :
 - **Could** : US 4, code promo.
 - **Won't** : paiement réel (Stripe / PayPal), compte client, historique des commandes.
 
+L'ordre de réalisation a suivi cette priorité : contrat, base, US 1, US 3, puis US 2. Pour l'US 3, j'ai d'abord fait un panier minimal en mémoire, que l'US 2 a ensuite complété.
+
 ## 5. Definition of Done
 
 Une US est terminée seulement si :
@@ -102,3 +104,8 @@ Signé : Enzo Martinez (Front) · Enzo Martinez (Back)
 - fixer les codes d'erreur ensemble (400 pour des données invalides, 409 pour un conflit de stock) ;
 - ne jamais changer la structure d'une réponse sans prévenir l'autre côté : chez moi, modifier `openapi.yaml` régénère les types du front, donc le front ne compile plus tant qu'il ne suit pas.
 
+## 7. Debrief
+
+- **Le plus dur à découper** : l'US 3 dépend en partie du panier de l'US 2. J'ai fait un panier minimal pour pouvoir livrer l'US 3 d'abord, comme le voulait la priorité.
+- **Désaccord sur le « fini »** : côté back, la route de commande paraissait finie dès que les tests passaient, alors que côté front elle ne l'était pas tant que la 409 n'était pas affichée proprement. C'est ce qui m'a fait ajouter le point 4 de la DoD.
+- **Points de synchro qu'on retrouve partout** : les noms de champs, le format des erreurs et le choix de qui calcule les montants (ici, toujours le serveur).
