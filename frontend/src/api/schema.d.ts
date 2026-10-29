@@ -36,12 +36,24 @@ export interface paths {
                          * @example {
                          *       "sizes": [
                          *         {
+                         *           "size": 40,
+                         *           "stock": 2
+                         *         },
+                         *         {
                          *           "size": 41,
                          *           "stock": 0
                          *         },
                          *         {
                          *           "size": 42,
                          *           "stock": 3
+                         *         },
+                         *         {
+                         *           "size": 42.5,
+                         *           "stock": 1
+                         *         },
+                         *         {
+                         *           "size": 43,
+                         *           "stock": 4
                          *         }
                          *       ]
                          *     }
@@ -93,6 +105,34 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
+                        /**
+                         * @example {
+                         *       "id": 12,
+                         *       "status": "confirmed",
+                         *       "total": 12900,
+                         *       "customer": {
+                         *         "firstName": "Ada",
+                         *         "lastName": "Lovelace",
+                         *         "email": "ada@example.com"
+                         *       },
+                         *       "address": {
+                         *         "street": "1 rue des Sneakers",
+                         *         "postalCode": "75011",
+                         *         "city": "Paris"
+                         *       },
+                         *       "items": [
+                         *         {
+                         *           "productId": 1,
+                         *           "name": "Nike Dunk Low Panda",
+                         *           "size": 42,
+                         *           "quantity": 1,
+                         *           "unitPrice": 12900,
+                         *           "lineTotal": 12900
+                         *         }
+                         *       ],
+                         *       "createdAt": "2026-10-29T10:00:00.000Z"
+                         *     }
+                         */
                         "application/json": components["schemas"]["Order"];
                     };
                 };
@@ -102,6 +142,18 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
+                        /**
+                         * @example {
+                         *       "code": "VALIDATION_ERROR",
+                         *       "message": "Données invalides",
+                         *       "issues": [
+                         *         {
+                         *           "path": "address.postalCode",
+                         *           "message": "Code postal invalide"
+                         *         }
+                         *       ]
+                         *     }
+                         */
                         "application/json": components["schemas"]["Error"];
                     };
                 };
@@ -119,8 +171,8 @@ export interface paths {
                          *         {
                          *           "productId": 1,
                          *           "size": 42,
-                         *           "requested": 2,
-                         *           "available": 1
+                         *           "requested": 1,
+                         *           "available": 0
                          *         }
                          *       ]
                          *     }
@@ -168,6 +220,24 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
+                        /**
+                         * @example {
+                         *       "items": [
+                         *         {
+                         *           "productId": 1,
+                         *           "size": 42,
+                         *           "quantity": 1,
+                         *           "name": "Nike Dunk Low Panda",
+                         *           "unitPrice": 12900,
+                         *           "lineTotal": 12900,
+                         *           "stock": 3,
+                         *           "status": "ok"
+                         *         }
+                         *       ],
+                         *       "total": 12900,
+                         *       "valid": true
+                         *     }
+                         */
                         "application/json": components["schemas"]["CartValidation"];
                     };
                 };
@@ -211,6 +281,36 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
+                        /**
+                         * @example {
+                         *       "products": [
+                         *         {
+                         *           "id": 1,
+                         *           "name": "Dunk Low",
+                         *           "brand": "Nike",
+                         *           "colorway": "Panda",
+                         *           "color": "#1b1b1b",
+                         *           "price": 12900
+                         *         },
+                         *         {
+                         *           "id": 2,
+                         *           "name": "1 High",
+                         *           "brand": "Jordan",
+                         *           "colorway": "Chicago",
+                         *           "color": "#c8102e",
+                         *           "price": 18900
+                         *         },
+                         *         {
+                         *           "id": 3,
+                         *           "name": "Samba OG",
+                         *           "brand": "Adidas",
+                         *           "colorway": "Cloud White",
+                         *           "color": "#e9e4d8",
+                         *           "price": 11000
+                         *         }
+                         *       ]
+                         *     }
+                         */
                         "application/json": {
                             products: components["schemas"]["Product"][];
                         };
@@ -251,6 +351,16 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
+                        /**
+                         * @example {
+                         *       "id": 1,
+                         *       "name": "Dunk Low",
+                         *       "brand": "Nike",
+                         *       "colorway": "Panda",
+                         *       "color": "#1b1b1b",
+                         *       "price": 12900
+                         *     }
+                         */
                         "application/json": components["schemas"]["Product"];
                     };
                 };
