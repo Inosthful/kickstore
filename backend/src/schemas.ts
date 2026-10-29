@@ -12,6 +12,8 @@ const cartLine = z.object({
 
 const lines = z.array(cartLine).min(1, 'Panier vide').max(20)
 
+export const cartRequestSchema = z.object({ items: lines })
+
 export const orderRequestSchema = z.object({
   customer: z.object({
     firstName: text,
