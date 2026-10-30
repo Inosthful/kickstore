@@ -14,9 +14,11 @@
     "lint:contract": "redocly lint openapi.yaml",
     "typecheck": "npm run typecheck -w api && npm run typecheck -w client",
     "test": "npm test -w api",
-    "build": "npm run build -w client"
+    "build": "npm run build -w client",
+    "model:add": "node client/tools/add-model.mjs"
   },
   "devDependencies": {
+    "@gltf-transform/cli": "^4.5.1",
     "@redocly/cli": "^2.72.1",
     "openapi-typescript": "^7.13.0"
   }
