@@ -6,6 +6,18 @@ import { prisma } from '../src/db'
 const app = createApp()
 
 const customer = { firstName: 'Ada', lastName: 'Lovelace', email: 'ada@example.com' }
+
+// champs communs aux produits de test (modèle 3D fictif)
+const base = {
+  sku: 'TEST-001',
+  retailPrice: 10000,
+  releaseDate: new Date('2024-01-01'),
+  modelSlug: 'test',
+  modelAuthor: 'Test',
+  modelAuthorUrl: 'https://example.com',
+  modelSource: 'https://example.com/test',
+  modelLicense: 'CC-BY-4.0',
+}
 const address = { street: '1 rue des Sneakers', postalCode: '75011', city: 'Paris' }
 
 let dunk: number
@@ -22,21 +34,35 @@ beforeEach(async () => {
   await prisma.stock.deleteMany()
   await prisma.product.deleteMany()
 
-  const base = { colorway: 'Panda', color: '#111111' }
   const a = await prisma.product.create({
     data: {
-      ...base, name: 'Dunk Low', brand: 'Nike', price: 10000,
+      ...base, name: 'Dunk Low', brand: 'Nike', colorway: 'Panda', price: 10000,
       stocks: { create: [{ size: 42, quantity: 3 }, { size: 43, quantity: 0 }] },
     },
   })
   const b = await prisma.product.create({
     data: {
-      ...base, name: 'Samba', brand: 'Adidas', price: 5000,
+      ...base, name: 'Samba', brand: 'Adidas', colorway: 'Black', price: 5000,
       stocks: { create: [{ size: 40, quantity: 1 }] },
     },
   })
   dunk = a.id
   samba = b.id
+})
+
+describe('GET /api/products', () => {
+  it('expose le produit avec son modèle 3D et son crédit', async () => {
+    const res = await request(app).get(`/api/products/${dunk}`)
+
+    expect(res.status).toBe(200)
+    expect(res.body).toMatchObject({
+      name: 'Dunk Low',
+      sku: 'TEST-001',
+      releaseDate: '2024-01-01',
+      model: { url: '/models/test.glb', image: '/models/test.png', author: 'Test', license: 'CC-BY-4.0' },
+    })
+    expect(res.body.color).toBeUndefined()
+  })
 })
 
 describe('GET /api/products/:id/stock', () => {
