@@ -209,7 +209,7 @@ Le site marchait mais il ne ressemblait à rien : six paires inventées, dessin�
 
 > En tant qu'acheteur, je veux voir la paire en 3D et la faire tourner, afin de me faire une idée réelle de la chaussure avant de choisir ma pointure.
 
-- **Front** : viewer three.js (orbite, rotation automatique, ombre au sol), hero qui fait défiler le catalogue, fiche produit avec le modèle, page de crédits.
+- **Front** : viewer three.js (orbite, rotation automatique, ombre au sol), hero qui fait défiler le catalogue, fiche produit avec le modèle et son crédit.
 - **Back** : le produit porte maintenant son modèle 3D et son crédit, plus le code style, le prix de sortie et la date de sortie.
 - **Point de synchro** : le schéma `Product` du contrat. `color` disparaît, `model` arrive (`url`, `image`, `author`, `authorUrl`, `source`, `license`), et on a tranché qui héberge les fichiers : le client, en statique dans `client/public/models`. L'API ne renvoie que des chemins et le crédit, obligatoire dans la réponse parce que la licence l'exige. Comme d'habitude, j'ai changé le contrat en premier, régénéré `shared/types`, et l'api comme le client ne compilaient plus tant qu'ils ne suivaient pas.
 
@@ -217,7 +217,7 @@ Critères d'acceptation :
 
 - la paire se charge dans la fiche et dans le hero, se laisse tourner à la souris et au doigt, et la page reste lisible pendant le chargement ;
 - chaque paire a une vignette fixe pour le catalogue et le panier, pas quinze scènes WebGL sur une page ;
-- l'auteur et la licence du modèle sont visibles sur la fiche et sur une page de crédits ;
+- l'auteur et la licence du modèle sont visibles sur la fiche ;
 - la commande marche toujours de bout en bout avec le vrai back (vérifié : ajout au panier, revalidation, commande).
 
 ### Deux essais

@@ -8,10 +8,6 @@ const { count, open } = useCart()
   <header class="header">
     <div class="container bar">
       <RouterLink to="/" class="logo">KICK<span>STORE</span></RouterLink>
-      <nav class="nav">
-        <RouterLink to="/">Catalogue</RouterLink>
-        <RouterLink to="/credits">Crédits 3D</RouterLink>
-      </nav>
       <button class="cart" type="button" aria-label="Ouvrir le panier" @click="open()">
         Panier
         <span v-if="count > 0" class="badge">{{ count }}</span>
@@ -49,18 +45,6 @@ const { count, open } = useCart()
   color: var(--accent);
 }
 
-.nav {
-  display: flex;
-  gap: 22px;
-  margin-right: auto;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--muted);
-}
-
-.nav a.router-link-exact-active {
-  color: var(--ink);
-}
 
 .cart {
   display: flex;
@@ -83,11 +67,5 @@ const { count, open } = useCart()
   font-size: 12px;
   line-height: 22px;
   text-align: center;
-}
-
-@media (max-width: 560px) {
-  .nav {
-    display: none;
-  }
 }
 </style>

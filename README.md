@@ -68,7 +68,7 @@ Sur le mock, ajouter `?prefer=409` (ou `?prefer=400`) à l'URL de la page de com
 
 ## Modèles 3D
 
-Les paires viennent de Sketchfab, en licence Creative Commons Attribution (les auteurs sont cités sur la page `/credits` du site et dans la réponse de l'API, champ `model`). Pour ajouter une paire :
+Les paires viennent de Sketchfab, en licence Creative Commons Attribution (l'auteur est cité sur la fiche de chaque paire et dans la réponse de l'API, champ `model`). Pour ajouter une paire :
 
 1. télécharger le modèle sur Sketchfab au format glTF (il faut un compte) et dézipper ;
 2. `npm run model:add <dossier> <slug>` : conversion des matériaux en metal/roughness (three.js ne lit plus l'extension specular/glossiness de Sketchfab), compression Draco, textures WebP 2048, écriture de `client/public/models/<slug>.glb` et du crédit dans `credits.json` ;
