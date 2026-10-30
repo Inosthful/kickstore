@@ -269,7 +269,8 @@ h2 {
   }
 
   .visual {
-    position: static;
+    position: relative;
+    top: auto;
     height: 380px;
   }
 }
