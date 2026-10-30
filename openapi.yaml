@@ -74,26 +74,26 @@ paths:
                   value:
                     id: 12
                     status: confirmed
-                    subtotal: 12900
+                    subtotal: 53100
                     discount: 0
-                    total: 12900
+                    total: 53100
                     customer: { firstName: Ada, lastName: Lovelace, email: ada@example.com }
                     address: { street: 1 rue des Sneakers, postalCode: '75011', city: Paris }
                     items:
-                      - { productId: 1, name: Nike Dunk Low Panda, size: 42, quantity: 1, unitPrice: 12900, lineTotal: 12900 }
+                      - { productId: 1, name: Jordan 4 Retro University Blue, size: 42, quantity: 1, unitPrice: 53100, lineTotal: 53100 }
                     createdAt: '2026-10-29T10:00:00.000Z'
                 code-promo:
                   value:
                     id: 13
                     status: confirmed
-                    subtotal: 12900
-                    discount: 1290
-                    total: 11610
+                    subtotal: 53100
+                    discount: 5310
+                    total: 47790
                     promoCode: KICK10
                     customer: { firstName: Ada, lastName: Lovelace, email: ada@example.com }
                     address: { street: 1 rue des Sneakers, postalCode: '75011', city: Paris }
                     items:
-                      - { productId: 1, name: Nike Dunk Low Panda, size: 42, quantity: 1, unitPrice: 12900, lineTotal: 12900 }
+                      - { productId: 1, name: Jordan 4 Retro University Blue, size: 42, quantity: 1, unitPrice: 53100, lineTotal: 53100 }
                     createdAt: '2026-10-29T10:00:00.000Z'
         '400':
           description: Données invalides, `issues` indique les champs
@@ -142,18 +142,18 @@ paths:
                 sans-code:
                   value:
                     items:
-                      - { productId: 1, size: 42, quantity: 1, name: Nike Dunk Low Panda, unitPrice: 12900, lineTotal: 12900, stock: 3, status: ok }
-                    subtotal: 12900
+                      - { productId: 1, size: 42, quantity: 1, name: Jordan 4 Retro University Blue, unitPrice: 53100, lineTotal: 53100, stock: 3, status: ok }
+                    subtotal: 53100
                     discount: 0
-                    total: 12900
+                    total: 53100
                     valid: true
                 code-promo:
                   value:
                     items:
-                      - { productId: 1, size: 42, quantity: 1, name: Nike Dunk Low Panda, unitPrice: 12900, lineTotal: 12900, stock: 3, status: ok }
-                    subtotal: 12900
-                    discount: 1290
-                    total: 11610
+                      - { productId: 1, size: 42, quantity: 1, name: Jordan 4 Retro University Blue, unitPrice: 53100, lineTotal: 53100, stock: 3, status: ok }
+                    subtotal: 53100
+                    discount: 5310
+                    total: 47790
                     valid: true
                     promo: { code: KICK10, status: applied, percent: 10 }
         '400':
@@ -182,9 +182,7 @@ paths:
                       $ref: '#/components/schemas/Product'
               example:
                 products:
-                  - { id: 1, name: Dunk Low, brand: Nike, colorway: Panda, color: '#1b1b1b', price: 12900 }
-                  - { id: 2, name: 1 High, brand: Jordan, colorway: Chicago, color: '#c8102e', price: 18900 }
-                  - { id: 3, name: Samba OG, brand: Adidas, colorway: Cloud White, color: '#e9e4d8', price: 11000 }
+                  - $ref: '#/components/examples/ProductExample/value'
 
   /api/products/{id}:
     get:
@@ -199,11 +197,32 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
-              example: { id: 1, name: Dunk Low, brand: Nike, colorway: Panda, color: '#1b1b1b', price: 12900 }
+              examples:
+                default:
+                  $ref: '#/components/examples/ProductExample'
         '404':
           $ref: '#/components/responses/NotFound'
 
 components:
+  examples:
+    ProductExample:
+      value:
+        id: 1
+        name: 4 Retro
+        brand: Jordan
+        colorway: University Blue
+        sku: CT8527-400
+        price: 53100
+        retailPrice: 20000
+        releaseDate: '2021-04-28'
+        model:
+          url: /models/jordan-4-university-blue.glb
+          image: /models/jordan-4-university-blue.webp
+          author: ShoesPlug
+          authorUrl: https://sketchfab.com/ShoesPlug
+          source: https://sketchfab.com/3d-models/jordan-4-retro-university-blue-68f32cad08544592aafd56a1ac7c60bc
+          license: CC-BY-4.0
+
   parameters:
     ProductId:
       name: id
@@ -256,14 +275,30 @@ components:
 
     Product:
       type: object
-      required: [id, name, brand, colorway, color, price]
+      required: [id, name, brand, colorway, sku, price, retailPrice, releaseDate, model]
       properties:
         id: { type: integer }
         name: { type: string }
         brand: { type: string }
-        colorway: { type: string }
-        color: { type: string, description: Couleur hex pour l'illustration }
-        price: { type: integer, description: Prix en centimes }
+        colorway: { type: string, description: Nom du coloris, example: University Blue }
+        sku: { type: string, description: Code style du fabricant, example: CT8527-400 }
+        price: { type: integer, description: Prix de vente en centimes d'euro }
+        retailPrice: { type: integer, description: 'Prix de sortie en centimes de dollar, pour comparaison' }
+        releaseDate: { type: string, format: date }
+        model:
+          $ref: '#/components/schemas/Model3D'
+
+    Model3D:
+      type: object
+      description: Modèle 3D de la paire et son crédit (licence Creative Commons)
+      required: [url, image, author, authorUrl, source, license]
+      properties:
+        url: { type: string, description: 'Fichier glb, chemin relatif au client', example: /models/jordan-4-university-blue.glb }
+        image: { type: string, description: Vignette webp rendue depuis le modèle, example: /models/jordan-4-university-blue.webp }
+        author: { type: string, example: ShoesPlug }
+        authorUrl: { type: string, example: https://sketchfab.com/ShoesPlug }
+        source: { type: string, description: Page du modèle d'origine }
+        license: { type: string, example: CC-BY-4.0 }
 
     StockResponse:
       type: object

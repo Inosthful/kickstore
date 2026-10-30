@@ -241,28 +241,7 @@ export interface paths {
                          * @example {
                          *       "products": [
                          *         {
-                         *           "id": 1,
-                         *           "name": "Dunk Low",
-                         *           "brand": "Nike",
-                         *           "colorway": "Panda",
-                         *           "color": "#1b1b1b",
-                         *           "price": 12900
-                         *         },
-                         *         {
-                         *           "id": 2,
-                         *           "name": "1 High",
-                         *           "brand": "Jordan",
-                         *           "colorway": "Chicago",
-                         *           "color": "#c8102e",
-                         *           "price": 18900
-                         *         },
-                         *         {
-                         *           "id": 3,
-                         *           "name": "Samba OG",
-                         *           "brand": "Adidas",
-                         *           "colorway": "Cloud White",
-                         *           "color": "#e9e4d8",
-                         *           "price": 11000
+                         *           "$ref": "#/components/examples/ProductExample/value"
                          *         }
                          *       ]
                          *     }
@@ -307,16 +286,6 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        /**
-                         * @example {
-                         *       "id": 1,
-                         *       "name": "Dunk Low",
-                         *       "brand": "Nike",
-                         *       "colorway": "Panda",
-                         *       "color": "#1b1b1b",
-                         *       "price": 12900
-                         *     }
-                         */
                         "application/json": components["schemas"]["Product"];
                     };
                 };
@@ -358,11 +327,44 @@ export interface components {
             id: number;
             name: string;
             brand: string;
+            /**
+             * @description Nom du coloris
+             * @example University Blue
+             */
             colorway: string;
-            /** @description Couleur hex pour l'illustration */
-            color: string;
-            /** @description Prix en centimes */
+            /**
+             * @description Code style du fabricant
+             * @example CT8527-400
+             */
+            sku: string;
+            /** @description Prix de vente en centimes d'euro */
             price: number;
+            /** @description Prix de sortie en centimes de dollar, pour comparaison */
+            retailPrice: number;
+            /** Format: date */
+            releaseDate: string;
+            model: components["schemas"]["Model3D"];
+        };
+        /** @description Modèle 3D de la paire et son crédit (licence Creative Commons) */
+        Model3D: {
+            /**
+             * @description Fichier glb, chemin relatif au client
+             * @example /models/jordan-4-university-blue.glb
+             */
+            url: string;
+            /**
+             * @description Vignette webp rendue depuis le modèle
+             * @example /models/jordan-4-university-blue.webp
+             */
+            image: string;
+            /** @example ShoesPlug */
+            author: string;
+            /** @example https://sketchfab.com/ShoesPlug */
+            authorUrl: string;
+            /** @description Page du modèle d'origine */
+            source: string;
+            /** @example CC-BY-4.0 */
+            license: string;
         };
         StockResponse: {
             sizes: components["schemas"]["StockSize"][];
