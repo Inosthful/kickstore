@@ -8,14 +8,22 @@ datasource db {
 }
 
 model Product {
-  id         Int         @id @default(autoincrement())
-  name       String
-  brand      String
-  colorway   String
-  color      String
-  price      Int
-  stocks     Stock[]
-  orderItems OrderItem[]
+  id             Int         @id @default(autoincrement())
+  name           String
+  brand          String
+  colorway       String
+  sku            String
+  price          Int
+  retailPrice    Int
+  releaseDate    DateTime
+  // modèle 3D (fichier dans client/public/models) et son crédit
+  modelSlug      String
+  modelAuthor    String
+  modelAuthorUrl String
+  modelSource    String
+  modelLicense   String
+  stocks         Stock[]
+  orderItems     OrderItem[]
 }
 
 model Stock {

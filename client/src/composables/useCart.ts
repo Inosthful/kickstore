@@ -4,7 +4,7 @@ import { api, type CartLine, type Product, type Promo } from '@/api/client'
 export interface CartItem {
   productId: number
   name: string
-  color: string
+  image: string
   size: number
   quantity: number
   unitPrice: number
@@ -22,7 +22,7 @@ function load(): CartItem[] {
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]')
     if (!Array.isArray(parsed)) return []
     return parsed
-      .filter((i) => Number.isInteger(i?.productId) && typeof i.size === 'number' && Number.isInteger(i.quantity))
+      .filter((i) => Number.isInteger(i?.productId) && typeof i.size === 'number' && Number.isInteger(i.quantity) && typeof i.image === 'string')
       .map((i) => ({ ...i, quantity: clamp(i.quantity) }))
   } catch {
     return []
@@ -135,7 +135,7 @@ export function useCart() {
     items.value.push({
       productId: product.id,
       name: `${product.brand} ${product.name} ${product.colorway}`,
-      color: product.color,
+      image: product.model.image,
       size,
       quantity: 1,
       unitPrice: product.price,

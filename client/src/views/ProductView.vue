@@ -3,9 +3,9 @@ import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { api, ApiError, type Product, type StockSize } from '@/api/client'
 import SizePicker from '@/components/SizePicker.vue'
-import SneakerImage from '@/components/SneakerImage.vue'
+import SneakerViewer from '@/components/SneakerViewer.vue'
 import { MAX_QUANTITY, useCart } from '@/composables/useCart'
-import { formatPrice, formatSize } from '@/utils/format'
+import { formatDate, formatDollars, formatPrice, formatSize } from '@/utils/format'
 
 const route = useRoute()
 const cart = useCart()
@@ -17,6 +17,7 @@ const sizes = ref<StockSize[] | null>(null)
 const loadingStock = ref(true)
 const stockError = ref(false)
 const selected = ref<number | null>(null)
+const touched = ref(false)
 
 async function loadProduct() {
   productError.value = null
@@ -47,6 +48,7 @@ watch(
     product.value = null
     sizes.value = null
     selected.value = null
+    touched.value = false
     loadProduct()
     loadStock()
   },
@@ -77,17 +79,20 @@ function addToCart() {
   <div v-if="productError" class="alert">{{ productError }}</div>
 
   <div v-else class="layout">
-    <div class="visual">
-      <SneakerImage v-if="product" :color="product.color" />
-      <div v-else class="skeleton visual-placeholder" />
+    <div class="stage visual" @pointerdown="touched = true">
+      <SneakerViewer v-if="product" :src="product.model.url" :auto-rotate="!touched" />
+      <p class="hint" :class="{ hidden: touched }">Glisse pour faire tourner la paire</p>
     </div>
 
-    <section>
+    <section class="details">
       <template v-if="product">
-        <p class="brand">{{ product.brand }}</p>
+        <p class="eyebrow">{{ product.brand }}</p>
         <h1>{{ product.name }}</h1>
         <p class="colorway">{{ product.colorway }}</p>
-        <p class="price">{{ formatPrice(product.price) }}</p>
+        <p class="price">
+          {{ formatPrice(product.price) }}
+          <span class="retail">retail {{ formatDollars(product.retailPrice) }}</span>
+        </p>
       </template>
       <template v-else>
         <div class="skeleton line short" />
@@ -117,6 +122,18 @@ function addToCart() {
       >
         {{ buttonLabel }}
       </button>
+
+      <dl v-if="product" class="facts">
+        <div><dt>Code style</dt><dd>{{ product.sku }}</dd></div>
+        <div><dt>Sortie</dt><dd>{{ formatDate(product.releaseDate) }}</dd></div>
+        <div>
+          <dt>Modèle 3D</dt>
+          <dd>
+            <a :href="product.model.source" target="_blank" rel="noopener">{{ product.model.author }}</a>
+            sur Sketchfab, licence {{ product.model.license }}
+          </dd>
+        </div>
+      </dl>
     </section>
   </div>
 </template>
@@ -131,41 +148,60 @@ function addToCart() {
 
 .layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
   gap: 40px;
+  align-items: start;
 }
 
 .visual {
-  padding: 32px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  position: sticky;
+  top: 88px;
+  height: min(620px, 70vh);
 }
 
-.visual-placeholder {
-  aspect-ratio: 320 / 190;
-}
-
-.brand {
+.hint {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 10%);
+  color: rgb(255 255 255 / 75%);
   font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--muted);
+  white-space: nowrap;
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+
+.hint.hidden {
+  opacity: 0;
 }
 
 h1 {
-  font-size: 34px;
+  margin-top: 4px;
+  font-size: 38px;
 }
 
 .colorway {
+  margin-top: 4px;
   color: var(--muted);
+  font-size: 18px;
 }
 
 .price {
-  margin: 12px 0 28px;
-  font-size: 24px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 16px 0 28px;
+  font-size: 26px;
   font-weight: 700;
+}
+
+.retail {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
 }
 
 h2 {
@@ -184,13 +220,13 @@ h2 {
 
 .line.title {
   width: 60%;
-  height: 34px;
+  height: 38px;
 }
 
 .note {
   margin-top: 12px;
   font-size: 14px;
-  color: var(--ok);
+  color: var(--accent);
 }
 
 .note.danger {
@@ -202,9 +238,40 @@ h2 {
   margin-top: 24px;
 }
 
-@media (max-width: 760px) {
+.facts {
+  display: grid;
+  gap: 10px;
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+}
+
+.facts div {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 12px;
+}
+
+.facts dt {
+  color: var(--muted);
+}
+
+.facts a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 860px) {
   .layout {
     grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .visual {
+    position: relative;
+    top: auto;
+    height: 380px;
   }
 }
 </style>

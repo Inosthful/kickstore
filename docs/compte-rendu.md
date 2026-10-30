@@ -90,7 +90,7 @@ Critères d'acceptation :
 
 - **Must** : base de données minimale (Product, Stock, Order), US 1, US 3.
 - **Should** : US 2.
-- **Could** : US 4, code promo (faite en séquence 3).
+- **Could** : US 4, code promo (faite en séquence 3) ; US 5, vitrine 3D (faite en séquence 4).
 - **Won't** : paiement réel (Stripe / PayPal), compte client, historique des commandes.
 
 L'ordre de réalisation a suivi cette priorité : contrat, base, US 1, US 3, puis US 2. Pour l'US 3, j'ai d'abord fait un panier minimal en mémoire, que l'US 2 a ensuite complété.
@@ -202,3 +202,42 @@ Ce que j'ai vérifié :
 - la 400 sur un code refusé à la commande est couverte par les tests de l'api.
 
 Limite du mock : n'importe quel code renvoie l'exemple « KICK10 appliqué », donc le message de code refusé ne se teste qu'avec le vrai back.
+
+## 10. Séquence 4 : la vitrine 3D (US 5)
+
+Le site marchait mais il ne ressemblait à rien : six paires inventées, dessinées avec un SVG plat. J'ai voulu en faire une vraie vitrine, avec des paires qui existent et qu'on peut regarder sous tous les angles.
+
+> En tant qu'acheteur, je veux voir la paire en 3D et la faire tourner, afin de me faire une idée réelle de la chaussure avant de choisir ma pointure.
+
+- **Front** : viewer three.js (orbite, rotation automatique, ombre au sol), hero qui fait défiler le catalogue, fiche produit avec le modèle, page de crédits.
+- **Back** : le produit porte maintenant son modèle 3D et son crédit, plus le code style, le prix de sortie et la date de sortie.
+- **Point de synchro** : le schéma `Product` du contrat. `color` disparaît, `model` arrive (`url`, `image`, `author`, `authorUrl`, `source`, `license`), et on a tranché qui héberge les fichiers : le client, en statique dans `client/public/models`. L'API ne renvoie que des chemins et le crédit, obligatoire dans la réponse parce que la licence l'exige. Comme d'habitude, j'ai changé le contrat en premier, régénéré `shared/types`, et l'api comme le client ne compilaient plus tant qu'ils ne suivaient pas.
+
+Critères d'acceptation :
+
+- la paire se charge dans la fiche et dans le hero, se laisse tourner à la souris et au doigt, et la page reste lisible pendant le chargement ;
+- chaque paire a une vignette fixe pour le catalogue et le panier, pas quinze scènes WebGL sur une page ;
+- l'auteur et la licence du modèle sont visibles sur la fiche et sur une page de crédits ;
+- la commande marche toujours de bout en bout avec le vrai back (vérifié : ajout au panier, revalidation, commande).
+
+### Deux essais
+
+J'ai d'abord essayé de construire les chaussures en code, comme pour mon projet Outer Wilds : une surface paramétrique pour l'empeigne, une texture peinte dans un canvas pour les panneaux et les logos, des pièces 3D pour les wings, la semelle, la languette et les lacets. Le résultat ressemblait à une sneaker, pas à la Jordan 4 Off-White que j'avais prise en référence. Une planète tolère l'approximation, un design de chaussure qu'on reconnaît au millimètre non. J'ai tout retiré.
+
+Deuxième piste, celle de mon portfolio : des modèles existants. Sketchfab a des modèles gratuits en CC Attribution pour la plupart des paires connues, et j'ai gardé celles qui étaient propres (pas les scans de paires usées). La Jordan 4 Off-White n'y existe qu'en payant, donc la Jordan 4 University Blue a servi de paire de test, et l'Off-White est représentée par la Jordan 1 Chicago.
+
+### Le pipeline
+
+- Les fichiers Sketchfab décrivent leurs matériaux avec l'extension specular/glossiness, que three.js ne lit plus : trois paires sortaient noires ou blanches. `gltf-transform metalrough` les convertit avant tout le reste.
+- Compression Draco et textures WebP 2048 : les fichiers passent de 5 à 35 Mo à 0,25 à 3,6 Mo, 20 Mo pour les quinze.
+- Le crédit (auteur, lien, licence) est lu dans les métadonnées du fichier, pas recopié à la main.
+- Les modèles arrivent dans tous les sens, parfois avec les deux chaussures de la paire. Le viewer cherche l'angle qui donne le plus petit rectangle au sol pour trouver l'axe de la chaussure, met le col (la partie la plus haute) à l'arrière, et cale le tout au sol sur des percentiles parce que certains fichiers ont des sommets perdus loin de la chaussure.
+- Les vignettes du catalogue sont rendues par le navigateur en dev, depuis une seule scène WebGL, et écrites en WebP par un petit middleware du serveur Vite. Les quinze font 0,6 Mo.
+- Les infos produit (code style, coloris, prix de sortie, date, dernière vente) ont été relevées sur StockX le 30 octobre 2026 ; le prix affiché est la dernière vente en euros.
+
+### Limites
+
+- Trois modèles (Jordan 1 Off-White, Jordan 1 Travis Scott, Converse) sont la paire entière, pas une seule chaussure. Ça se voit dans le viewer, je l'ai laissé.
+- Ce sont des modèles faits par des fans de designs Nike, adidas, etc. Pour un projet de cours c'est acceptable, pour une vraie boutique il faudrait l'accord des marques.
+- Le front n'a toujours pas de tests automatisés ; la recette est manuelle, sur le vrai back.
+- three.js pèse 164 Ko gzippés ; il est dans un chunk à part, chargé seulement quand un viewer s'affiche.

@@ -1,14 +1,19 @@
 :root {
-  --bg: #f4f3ef;
+  --bg: #f3f1ec;
   --surface: #fff;
-  --ink: #111;
-  --muted: #6b6b66;
-  --line: #e4e2db;
-  --ok: #0a7d4b;
+  --tile: #e9e6df;
+  --ink: #141414;
+  --muted: #6f6d67;
+  --line: #e1ded6;
+  --accent: #0a7d4b;
   --danger: #c62828;
-  --radius: 14px;
+  --stage: #15151a;
+  --stage-glow: #2a2a33;
+  --radius: 16px;
+  --font-display: 'Space Grotesk', Inter, system-ui, sans-serif;
   font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
   color: var(--ink);
+  -webkit-font-smoothing: antialiased;
 }
 
 *,
@@ -28,6 +33,11 @@ a {
   text-decoration: none;
 }
 
+img {
+  max-width: 100%;
+  display: block;
+}
+
 button,
 input {
   font: inherit;
@@ -42,39 +52,70 @@ button:disabled {
   cursor: not-allowed;
 }
 
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
 .container {
-  width: min(1120px, 100% - 32px);
+  width: min(1200px, 100% - 40px);
   margin-inline: auto;
 }
 
 .page {
-  padding: 32px 0 64px;
+  padding: 32px 0 80px;
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .btn {
-  display: inline-block;
-  padding: 15px 24px;
-  border: none;
-  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 22px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
   background: var(--ink);
   color: #fff;
-  font-weight: 700;
+  font-weight: 600;
   text-align: center;
-  transition: opacity 0.15s;
+  transition: transform 0.15s, opacity 0.15s, background 0.15s;
 }
 
 .btn:hover:not(:disabled) {
-  opacity: 0.85;
+  transform: translateY(-1px);
 }
 
 .btn:disabled {
+  border-color: #cfcdc5;
   background: #cfcdc5;
 }
 
 .btn.secondary {
   background: transparent;
-  border: 1px solid var(--ink);
   color: var(--ink);
+}
+
+.btn.light {
+  border-color: #fff;
+  background: #fff;
+  color: var(--ink);
+}
+
+.btn.ghost {
+  border-color: rgb(255 255 255 / 35%);
+  background: transparent;
+  color: #fff;
 }
 
 .link {
@@ -84,12 +125,33 @@ button:disabled {
   color: var(--ink);
   font-size: 14px;
   text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.chip {
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.chip:hover {
+  border-color: var(--ink);
+}
+
+.chip.active {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: #fff;
 }
 
 .alert {
   padding: 14px 16px;
   border: 1px solid #f0c4c4;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #fdeeee;
   color: var(--danger);
 }
@@ -113,7 +175,7 @@ button:disabled {
 }
 
 .skeleton {
-  background: linear-gradient(90deg, #ebe9e2 25%, #f5f4ef 50%, #ebe9e2 75%);
+  background: linear-gradient(90deg, #e6e3dc 25%, #f1efea 50%, #e6e3dc 75%);
   background-size: 200% 100%;
   border-radius: 8px;
   animation: shimmer 1.2s infinite;
@@ -122,5 +184,32 @@ button:disabled {
 @keyframes shimmer {
   to {
     background-position: -200% 0;
+  }
+}
+
+/* la scène sombre dans laquelle on affiche la 3D */
+.stage {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: radial-gradient(ellipse at 50% 70%, var(--stage-glow) 0%, var(--stage) 65%);
+  color: #fff;
+}
+
+.stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 100%, rgb(255 255 255 / 6%), transparent 60%);
+}
+
+@media (max-width: 720px) {
+  .container {
+    width: min(1200px, 100% - 32px);
+  }
+
+  .page {
+    padding-top: 20px;
   }
 }
