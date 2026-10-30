@@ -3,7 +3,6 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCart } from '@/composables/useCart'
 import { formatPrice, formatSize } from '@/utils/format'
-import SneakerImage from './SneakerImage.vue'
 
 const router = useRouter()
 const {
@@ -38,7 +37,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 
           <ul v-else class="lines">
             <li v-for="item in items" :key="`${item.productId}:${item.size}`" class="line">
-              <div class="thumb"><SneakerImage :color="item.color" /></div>
+              <div class="thumb"><img :src="item.image" alt="" /></div>
               <div class="info">
                 <p class="name">{{ item.name }}</p>
                 <p class="meta">Pointure {{ formatSize(item.size) }} · {{ formatPrice(item.unitPrice) }}</p>
@@ -156,9 +155,15 @@ header {
   flex: none;
   width: 84px;
   height: 84px;
-  padding: 8px;
-  background: var(--bg);
-  border-radius: 8px;
+  padding: 4px;
+  background: radial-gradient(ellipse at 50% 60%, #fff 0%, var(--tile) 75%);
+  border-radius: 10px;
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .info {

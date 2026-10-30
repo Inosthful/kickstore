@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { api, type Product } from '@/api/client'
+import HeroShowcase from '@/components/HeroShowcase.vue'
 import ProductCard from '@/components/ProductCard.vue'
 
 const products = ref<Product[]>([])
 const loading = ref(true)
 const error = ref(false)
+const brand = ref<string | null>(null)
+
+const brands = computed(() => [...new Set(products.value.map((p) => p.brand))])
+const shown = computed(() => (brand.value ? products.value.filter((p) => p.brand === brand.value) : products.value))
 
 async function load() {
   loading.value = true
@@ -23,32 +28,82 @@ onMounted(load)
 </script>
 
 <template>
-  <h1>Les paires du moment</h1>
-  <p class="subtitle">Choisis ta pointure, le stock est vérifié en direct.</p>
+  <HeroShowcase v-if="products.length" :products="products" />
+  <div v-else-if="loading" class="skeleton hero-placeholder" />
 
-  <div v-if="error" class="alert state">
-    Impossible de charger le catalogue.
-    <button class="link" type="button" @click="load">Réessayer</button>
-  </div>
+  <section id="catalogue" class="catalogue">
+    <div class="head">
+      <div>
+        <p class="eyebrow">Catalogue</p>
+        <h2>{{ products.length || '' }} paires, toutes en 3D</h2>
+      </div>
+      <div v-if="brands.length" class="filters" role="group" aria-label="Filtrer par marque">
+        <button class="chip" :class="{ active: brand === null }" type="button" @click="brand = null">Toutes</button>
+        <button
+          v-for="b in brands"
+          :key="b"
+          class="chip"
+          :class="{ active: brand === b }"
+          type="button"
+          @click="brand = brand === b ? null : b"
+        >
+          {{ b }}
+        </button>
+      </div>
+    </div>
 
-  <div v-else class="grid">
-    <template v-if="loading">
-      <div v-for="n in 6" :key="n" class="skeleton placeholder" />
-    </template>
-    <template v-else>
-      <ProductCard v-for="product in products" :key="product.id" :product="product" />
-    </template>
-  </div>
+    <div v-if="error" class="alert state">
+      Impossible de charger le catalogue.
+      <button class="link" type="button" @click="load">Réessayer</button>
+    </div>
+
+    <div v-else class="grid">
+      <template v-if="loading">
+        <div v-for="n in 6" :key="n" class="skeleton placeholder" />
+      </template>
+      <template v-else>
+        <ProductCard v-for="product in shown" :key="product.id" :product="product" />
+      </template>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p>
+      Les modèles 3D viennent de Sketchfab, en licence Creative Commons.
+      <RouterLink to="/credits" class="link">Voir les crédits</RouterLink>
+    </p>
+  </footer>
 </template>
 
 <style scoped>
-h1 {
-  font-size: 32px;
+.hero-placeholder {
+  height: 560px;
+  border-radius: var(--radius);
 }
 
-.subtitle {
-  margin: 4px 0 28px;
-  color: var(--muted);
+.catalogue {
+  margin-top: 56px;
+  scroll-margin-top: 80px;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+h2 {
+  margin-top: 6px;
+  font-size: 30px;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .grid {
@@ -65,5 +120,13 @@ h1 {
 .state {
   display: flex;
   gap: 12px;
+}
+
+.foot {
+  margin-top: 64px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 14px;
 }
 </style>
