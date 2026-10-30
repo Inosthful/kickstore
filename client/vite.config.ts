@@ -1,5 +1,5 @@
 import vue from '@vitejs/plugin-vue'
-import { mkdirSync } from 'node:fs'
+import { mkdirSync, writeFileSync } from 'node:fs'
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig, type Plugin } from 'vite'
 
@@ -22,9 +22,13 @@ function thumbnailWriter(): Plugin {
         req.on('end', async () => {
           mkdirSync(dir, { recursive: true })
           const png = Buffer.from(body.replace(/^data:image\/png;base64,/, ''), 'base64')
-          // sharp est déjà là via gltf-transform : on sert du webp, trois fois plus léger que le png
-          const sharp = (await import('sharp')).default
-          await sharp(png).resize(800).webp({ quality: 84 }).toFile(`${dir}/${slug}.webp`)
+          // sharp vient de gltf-transform, installé à la racine du mono-repo : on l'importe
+          // sans le typer pour que le build du client seul (image Docker) ne le cherche pas,
+          // et on garde le png si jamais il manque
+          const sharpModule = 'sharp'
+          const sharp = await import(sharpModule).then((m) => m.default).catch(() => null)
+          if (sharp) await sharp(png).resize(800).webp({ quality: 84 }).toFile(`${dir}/${slug}.webp`)
+          else writeFileSync(`${dir}/${slug}.png`, png)
           res.end('ok')
         })
       })
