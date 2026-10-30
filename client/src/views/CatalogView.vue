@@ -66,13 +66,6 @@ onMounted(load)
       </template>
     </div>
   </section>
-
-  <footer class="foot">
-    <p>
-      Les modèles 3D viennent de Sketchfab, en licence Creative Commons.
-      <RouterLink to="/credits" class="link">Voir les crédits</RouterLink>
-    </p>
-  </footer>
 </template>
 
 <style scoped>
@@ -120,13 +113,5 @@ h2 {
 .state {
   display: flex;
   gap: 12px;
-}
-
-.foot {
-  margin-top: 64px;
-  padding-top: 24px;
-  border-top: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 14px;
 }
 </style>

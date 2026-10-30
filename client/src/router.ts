@@ -8,7 +8,6 @@ export const router = createRouter({
   routes: [
     { path: '/', name: 'catalog', component: () => import('@/views/CatalogView.vue') },
     { path: '/products/:id', name: 'product', component: () => import('@/views/ProductView.vue') },
-    { path: '/credits', name: 'credits', component: () => import('@/views/CreditsView.vue') },
     {
       path: '/checkout',
       name: 'checkout',
