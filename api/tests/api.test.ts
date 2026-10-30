@@ -59,7 +59,7 @@ describe('GET /api/products', () => {
       name: 'Dunk Low',
       sku: 'TEST-001',
       releaseDate: '2024-01-01',
-      model: { url: '/models/test.glb', image: '/models/test.png', author: 'Test', license: 'CC-BY-4.0' },
+      model: { url: '/models/test.glb', image: '/models/test.webp', author: 'Test', license: 'CC-BY-4.0' },
     })
     expect(res.body.color).toBeUndefined()
   })
